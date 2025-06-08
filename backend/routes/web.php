@@ -15,3 +15,12 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 });
+
+/**
+ *  for testing
+ * 
+ *  */ 
+Route::get('/fetch-and-store-cryptos', function () {
+    (new \App\Services\CoinGeckoService)->storeMarketData();
+    return 'Synced!';
+});

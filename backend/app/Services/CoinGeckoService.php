@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Cryptocurrency;
 
 class CoinGeckoService
 {
@@ -115,4 +116,37 @@ class CoinGeckoService
         
         $this->lastRequestTime = microtime(true);
     }
+/**
+ * Store market data in the db
+ * 
+ */
+    public function storeMarketData()
+{
+    $coins = $this->getCoinsMarkets();
+
+    if (!$coins) {
+        Log::warning('No coin market data returned from CoinGecko');
+        return;
+    }
+
+    foreach ($coins as $coin) {
+        Cryptocurrency::updateOrCreate(
+            ['external_id' => $coin['id']],
+            [
+                'symbol' => $coin['symbol'],
+                'name' => $coin['name'],
+                'slug' => $coin['id'], 
+                'current_price' => $coin['current_price'],
+                'market_cap' => $coin['market_cap'],
+                'volume_24h' => $coin['total_volume'],
+                'price_change_24h' => $coin['price_change_24h'] ?? 0,
+                'asset_type_id' => 1, 
+            ]
+        );
+    }
 }
+
+
+    
+}
+
