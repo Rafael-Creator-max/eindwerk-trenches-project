@@ -64,4 +64,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // rs with the other table
+    public function followedCryptos()
+    {
+    return $this->belongsToMany(Cryptocurrency::class, 'user_crypto_follows');
+    }
+    //
+    public function cryptocurrencies()
+    {
+    return $this->belongsToMany(\App\Models\Cryptocurrency::class, 'user_crypto_follows');
+    }
 }

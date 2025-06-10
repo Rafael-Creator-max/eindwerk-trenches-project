@@ -13,7 +13,23 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->timestamps();
-        });
+            });
+
+
+        DB::table('asset_types')->insert([
+            [
+            'name' => 'Cryptocurrency',
+            'description' => 'Major digital currencies like Bitcoin and Ethereum',
+            ],
+            [
+            'name' => 'Altcoin',
+            'description' => 'Alternative coins to Bitcoin, often with unique use cases',
+            ],
+            [
+            'name' => 'Memecoin',
+            'description' => 'Joke or community-driven coins with viral popularity',
+            ],
+       ]);
     }
 
     public function down()
