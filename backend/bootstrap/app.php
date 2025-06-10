@@ -12,7 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->web(\Illuminate\Session\Middleware\StartSession::class);
+        $middleware->api(\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class);
+        
+        $middleware->validateCsrfTokens(except: [
+            '*',
+        ]);
+        
+        $middleware->trustProxies(at: '*');
+        $middleware->trustHosts(at: ['*']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
