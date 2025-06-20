@@ -7,13 +7,14 @@ import Navbar from '@/components/Navbar';
 import { FiArrowUp, FiArrowDown, FiRefreshCw } from 'react-icons/fi';
 
 interface Cryptocurrency {
-  id: string;
+  id: number;
   name: string;
   symbol: string;
-  current_price: number;
-  price_change_percentage_24h: number;
-  market_cap: number;
-  image: string;
+  slug: string;
+  current_price: number | string;
+  price_change_24h: number | string;
+  market_cap: number | string;
+  volume_24h: number | string;
 }
 
 export default function CryptocurrenciesPage() {
@@ -54,25 +55,21 @@ export default function CryptocurrenciesPage() {
     return formatCurrency(value);
   };
 
-  const formatPercentage = (value: number | null) => {
-    if (value === null || isNaN(value)) return 'N/A';
-    const isPositive = value >= 0;
+  const formatPercentage = (value: number | string | null) => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (numValue === null || isNaN(numValue)) return 'N/A';
+    const isPositive = numValue >= 0;
     const colorClass = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-    const arrow = isPositive ? '↑' : '↓';
+    const ArrowIcon = isPositive ? FiArrowUp : FiArrowDown;
     return (
-      <span className={`${colorClass} flex items-center justify-end`}>
-        {arrow} {Math.abs(value).toFixed(2)}%
+      <span className={`${colorClass} flex items-center justify-end gap-1`}>
+        <ArrowIcon className="inline" /> {Math.abs(numValue).toFixed(2)}%
       </span>
     );
   };
 
-  const getImageUrl = (image?: string | null) => {
-    // If no image is provided or it's null/undefined, return a fallback image
-    if (!image) return 'https://cryptoicons.org/api/icon/coin/200';
-    // If the image is already a full URL, return it
-    if (image.startsWith('http')) return image;
-    // If it's a symbol, try to construct the full URL
-    return `https://cryptoicons.org/api/icon/${image.toLowerCase()}/200`;
+  const getImageUrl = (symbol: string) => {
+    return `https://cryptoicons.org/api/icon/${symbol.toLowerCase()}/200`;
   };
 
   const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -105,6 +102,10 @@ export default function CryptocurrenciesPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar />
+        <style jsx global>{`
+          tr { transition: background-color 0.2s ease-in-out; }
+          tr:active { transform: scale(0.99); }
+        `}</style>
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -210,8 +211,8 @@ export default function CryptocurrenciesPage() {
                   {filteredCryptos.map((crypto, index) => (
                     <tr 
                       key={crypto.id} 
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                      onClick={() => router.push(`/cryptocurrencies/${crypto.id}`)}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                      onClick={() => router.push(`/cryptocurrencies/${crypto.slug}`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         {index + 1}
@@ -219,30 +220,27 @@ export default function CryptocurrenciesPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <img 
-                            className="h-8 w-8 rounded-full mr-3" 
-                            src={getImageUrl(crypto.image)} 
+                            src={getImageUrl(crypto.symbol)} 
                             alt={crypto.name}
+                            className="w-8 h-8 rounded-full mr-3 bg-gray-100 dark:bg-gray-600"
                             onError={(e) => {
-                              // Fallback to a generic crypto icon if the image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.onerror = null;
-                              target.src = 'https://cryptoicons.org/api/icon/coin/200';
+                              e.currentTarget.src = 'https://cryptoicons.org/api/icon/coin/200';
                             }}
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">{crypto.name}</div>
+                            <div className="font-medium text-gray-900 dark:text-white">{crypto.name}</div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">{crypto.symbol.toUpperCase()}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
-                        {crypto.current_price ? formatCurrency(crypto.current_price) : 'N/A'}
+                        {formatCurrency(Number(crypto.current_price))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {formatPercentage(crypto.price_change_percentage_24h)}
+                        {formatPercentage(Number(crypto.price_change_24h))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
-                        {crypto.market_cap ? formatMarketCap(crypto.market_cap) : 'N/A'}
+                        {formatMarketCap(Number(crypto.market_cap))}
                       </td>
                     </tr>
                   ))}
