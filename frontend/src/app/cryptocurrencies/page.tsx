@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
@@ -15,6 +15,7 @@ interface Cryptocurrency {
   price_change_24h: number | string;
   market_cap: number | string;
   volume_24h: number | string;
+  image_url?: string;
 }
 
 export default function CryptocurrenciesPage() {
@@ -26,8 +27,18 @@ export default function CryptocurrenciesPage() {
   useEffect(() => {
     const fetchCryptos = async () => {
       try {
-        const response = await api.get('/api/cryptocurrencies');
+        setLoading(true);
+        const response = await api.get('/api/cryptocurrencies', {
+          params: { _t: new Date().getTime() } // Prevent caching
+        });
         setCryptos(response.data);
+        const now = new Date();
+        setLastUpdated(now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        }));
       } catch (err) {
         setError('Failed to fetch cryptocurrencies');
         console.error('Error fetching cryptocurrencies:', err);
@@ -36,7 +47,17 @@ export default function CryptocurrenciesPage() {
       }
     };
 
+    // Initial fetch
     fetchCryptos();
+    
+    // Set up interval for auto-refresh (5 minutes)
+    const intervalId = setInterval(() => {
+      console.log('Auto-refreshing cryptocurrency data...');
+      fetchCryptos();
+    }, 5 * 60 * 1000); // 5 minutes in milliseconds
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const formatCurrency = (value: number) => {
@@ -68,8 +89,41 @@ export default function CryptocurrenciesPage() {
     );
   };
 
-  const getImageUrl = (symbol: string) => {
+  const getImageUrl = (symbol: string, name: string) => {
     return `https://cryptoicons.org/api/icon/${symbol.toLowerCase()}/200`;
+  };
+
+  const getCryptoImageUrl = (symbol: string, name: string): string => {
+    const symbolLower = symbol.toLowerCase();
+    const nameLower = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Try different URL patterns for the image
+    const patterns = [
+      `https://cryptoicons.org/api/icon/${symbolLower}/200`,
+      `https://cryptologos.cc/logos/${nameLower}-${symbolLower}-logo.png`,
+      `https://cryptologos.cc/logos/${nameLower}-logo.png`,
+      `https://cryptologos.cc/logos/${symbolLower}-logo.png`,
+      `https://s2.coinmarketcap.com/static/img/coins/64x64/${symbolLower}.png`,
+      `https://cryptoicons.org/api/icon/${symbolLower}/128`,
+      `https://cryptoicons.org/api/icon/${symbolLower}/64`
+    ];
+    
+    return patterns[0]; // Return first URL, handle fallbacks in onError
+  };
+
+  const getFallbackImageUrl = (symbol: string, name: string): string => {
+    const symbolLower = symbol.toLowerCase();
+    const nameLower = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Return a placeholder with the first 3 letters of the symbol
+    return `data:image/svg+xml;base64,${btoa(`
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="16" fill="#f3f4f6"/>
+        <text x="50%" y="50%" font-family="Arial" font-size="10" text-anchor="middle" dy=".3em" fill="#6b7280">
+          ${symbol.slice(0, 3).toUpperCase()}
+        </text>
+      </svg>
+    `)}`;
   };
 
   const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -78,20 +132,32 @@ export default function CryptocurrenciesPage() {
   const refreshData = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/cryptocurrencies');
+      const response = await api.get('/api/cryptocurrencies', {
+        params: { _t: new Date().getTime() } // Prevent caching
+      });
       setCryptos(response.data);
-      setLastUpdated(new Date().toLocaleTimeString());
+      const now = new Date();
+      setLastUpdated(now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }));
     } catch (err) {
-      setError('Failed to fetch cryptocurrencies');
       console.error('Error fetching cryptocurrencies:', err);
+      // Don't show error to user for auto-refresh, just log it
+      if (!lastUpdated) {
+        setError('Failed to fetch cryptocurrencies');
+      }
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    refreshData();
-  }, []);
+  
+  // Memoized fetch function to prevent unnecessary re-renders
+  const fetchCryptos = useCallback(async () => {
+    await refreshData();
+  }, [lastUpdated]); // Only recreate when lastUpdated changes
 
   const filteredCryptos = cryptos.filter(crypto => 
     crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,11 +189,16 @@ export default function CryptocurrenciesPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cryptocurrency Prices</h1>
-            {lastUpdated && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Last updated: {lastUpdated}
-              </p>
-            )}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {lastUpdated 
+                ? `Last updated: ${lastUpdated}` 
+                : 'Loading...'}
+              {loading && (
+                <span className="ml-2 inline-block">
+                  <FiRefreshCw className="animate-spin h-3 w-3 inline" />
+                </span>
+              )}
+            </p>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3">
             <div className="relative">
@@ -219,14 +290,24 @@ export default function CryptocurrenciesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <img 
-                            src={getImageUrl(crypto.symbol)} 
-                            alt={crypto.name}
-                            className="w-8 h-8 rounded-full mr-3 bg-gray-100 dark:bg-gray-600"
-                            onError={(e) => {
-                              e.currentTarget.src = 'https://cryptoicons.org/api/icon/coin/200';
-                            }}
-                          />
+                          <div className="relative flex-shrink-0 w-8 h-8 mr-3">
+                            <img
+                              src={crypto.image_url || getCryptoImageUrl(crypto.symbol, crypto.name)}
+                              alt={crypto.name}
+                              className="w-full h-full rounded-full object-cover bg-gray-100 dark:bg-gray-600"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null;
+                                target.src = getFallbackImageUrl(crypto.symbol, crypto.name);
+                              }}
+                              loading="lazy"
+                            />
+                            {!crypto.image_url && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full text-xs font-medium text-gray-500 dark:text-gray-300">
+                                {crypto.symbol.slice(0, 3).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
                           <div>
                             <div className="font-medium text-gray-900 dark:text-white">{crypto.name}</div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">{crypto.symbol.toUpperCase()}</div>
