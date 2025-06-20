@@ -16,7 +16,6 @@ use Carbon\Carbon;
  *
  * APIs for managing cryptocurrencies and user interactions with them
  */
-
 class CryptocurrencyController extends Controller
 {
     protected $coinGeckoService;
@@ -76,37 +75,7 @@ class CryptocurrencyController extends Controller
 
         return response()->json($cryptos);
     }
-
-    /**
-     * Get Cryptocurrency Details
-     *
-     * Returns detailed information about a specific cryptocurrency by its slug or id.
-     * Data is cached for 5 minutes to improve performance.
-     *
-     * @urlParam id string required The slug or id of the cryptocurrency. Example: bitcoin
-     *
-     * @response 200 {
-     *   "data": {
-     *     "id": 1,
-     *     "asset_type_id": 1,
-     *     "symbol": "BTC",
-     *     "name": "Bitcoin",
-     *     "slug": "bitcoin",
-     *     "external_id": "bitcoin",
-     *     "current_price": "50000.00000000",
-     *     "market_cap": "1000000000000.00",
-     *     "volume_24h": "50000000000.00",
-     *     "price_change_24h": "2.50000000",
-     *     "created_at": "2023-01-01T00:00:00.000000Z",
-     *     "updated_at": "2023-01-01T00:00:00.000000Z",
-     *     "asset_type": {
-     *       "id": 1,
-     *       "name": "Cryptocurrency",
-     *       "description": "Digital or virtual currency that uses cryptography for security",
-     *       "created_at": "2023-01-01T00:00:00.000000Z",
-     *       "updated_at": "2023-01-01T00:00:00.000000Z"
-     *     },
-
+    
     /**
      * Fetch and store cryptocurrencies from CoinGecko API
      */
@@ -150,13 +119,62 @@ class CryptocurrencyController extends Controller
     }
 
     /**
+     * Get Cryptocurrency Details
+     *
+     * Returns detailed information about a specific cryptocurrency by its slug or id.
+     * Data is cached for 5 minutes to improve performance.
+     *
+     * @urlParam id string required The slug or id of the cryptocurrency. Example: bitcoin
+     *
+     * @response 200 {
+     *   "data": {
+     *     "id": 1,
+     *     "asset_type_id": 1,
+     *     "symbol": "BTC",
+     *     "name": "Bitcoin",
+     *     "slug": "bitcoin",
+     *     "external_id": "bitcoin",
+     *     "current_price": "50000.00000000",
+     *     "market_cap": "1000000000000.00",
+     *     "volume_24h": "50000000000.00",
+     *     "price_change_24h": "2.50000000",
+     *     "created_at": "2023-01-01T00:00:00.000000Z",
+     *     "updated_at": "2023-01-01T00:00:00.000000Z",
+     *     "asset_type": {
+     *       "id": 1,
+     *       "name": "Cryptocurrency",
+     *       "description": "Digital or virtual currency that uses cryptography for security",
+     *       "created_at": "2023-01-01T00:00:00.000000Z",
+     *       "updated_at": "2023-01-01T00:00:00.000000Z"
+     *     },
+     *     "followers": []
+     *   }
+     * }
+     *
+     * @response 404 {
+     *   "message": "Cryptocurrency not found"
+     * }
+     *
+     * @group Cryptocurrency Management
+     */
+    public function show($id)
+    {
+        $crypto = Cryptocurrency::where('slug', $id)
+            ->orWhere('id', $id)
+            ->with('assetType')
+            ->firstOrFail();
+
+        return response()->json(['data' => $crypto]);
+    }
+
+    /**
      * Follow a Cryptocurrency
      *
      * Allows the authenticated user to follow a specific cryptocurrency.
      * Requires authentication via Bearer token.
      *
      * @authenticated
-     * @urlParam cryptocurrency string required The slug of the cryptocurrency to follow. Example: bitcoin
+     * @urlParam id string required The slug or id of the cryptocurrency. Example: bitcoin
      *
      * @response 200 {
      *   "message": "Successfully followed cryptocurrency"
@@ -308,135 +326,29 @@ class CryptocurrencyController extends Controller
     }
 
     /**
-     * Get Cryptocurrency Details
-     *
-     * Returns detailed information about a specific cryptocurrency by its slug or id.
-     * Data is cached for 5 minutes to improve performance.
-     *
-     * @urlParam id string required The slug or id of the cryptocurrency. Example: bitcoin
-     *
-     * @response 200 {
-     *   "data": {
-     *     "id": 1,
-     *     "asset_type_id": 1,
-     *     "symbol": "BTC",
-     *     "name": "Bitcoin",
-     *     "slug": "bitcoin",
-     *     "external_id": "bitcoin",
-     *     "current_price": "50000.00000000",
-     *     "market_cap": "1000000000000.00",
-     *     "volume_24h": "50000000000.00",
-     *     "price_change_24h": "2.50000000",
-     *     "created_at": "2023-01-01T00:00:00.000000Z",
-     *     "updated_at": "2023-01-01T00:00:00.000000Z",
-     *     "asset_type": {
-     *       "id": 1,
-     *       "name": "Cryptocurrency",
-     *       "description": "Digital or virtual currency that uses cryptography for security",
-     *       "created_at": "2023-01-01T00:00:00.000000Z",
-     *       "updated_at": "2023-01-01T00:00:00.000000Z"
-     *     },
-     *     "followers": []
-     *   }
-     * }
-     *
-     * @response 404 {
-     *   "message": "Cryptocurrency not found"
-     * }
-     *
-     * @group Cryptocurrency Management
-     */
-    public function show($id)
-    {
-        $crypto = Cryptocurrency::where('slug', $id)
-            ->orWhere('id', $id)
-            ->with('assetType')
-            ->firstOrFail();
-
-        // Add price change 24h to the response if not already present
-        if (!isset($crypto->price_change_24h)) {
-            $crypto->price_change_24h = $crypto->price_change_24h ?? 0;
-        }
-
-        return response()->json(['data' => $crypto]);
-    }
-
-    /**
      * Get price history for a cryptocurrency
      *
      * @param string $id
-     * @param CoinGeckoService $coinGeckoService
      * @return \Illuminate\Http\JsonResponse
      */
     public function priceHistory($id, CoinGeckoService $coinGeckoService)
     {
-        try {
-            $crypto = Cryptocurrency::where('slug', $id)
-                ->orWhere('id', $id)
-                ->firstOrFail();
+        $crypto = Cryptocurrency::where('slug', $id)
+            ->orWhere('id', $id)
+            ->firstOrFail();
 
-            $days = min((int)request()->input('days', 7), 365);
-            
-            // Log the request
-            \Log::info('Fetching price history', [
-                'crypto_id' => $crypto->id,
-                'external_id' => $crypto->external_id,
-                'days' => $days
-            ]);
-            
-            // Get real data from CoinGecko API
-            $history = $coinGeckoService->getPriceHistory($crypto->external_id, $days);
+        $days = request()->input('days', 7);
+        $history = $coinGeckoService->getPriceHistory($crypto->external_id, $days);
 
-            if (!$history) {
-                \Log::warning('Failed to fetch price history from CoinGecko', [
-                    'crypto_id' => $crypto->id,
-                    'external_id' => $crypto->external_id
-                ]);
-                
-                // Return empty data structure instead of error
-                return response()->json([
-                    'data' => [
-                        'prices' => [],
-                        'market_caps' => [],
-                        'total_volumes' => []
-                    ],
-                    'crypto_id' => $crypto->id,
-                    'symbol' => $crypto->symbol,
-                    'name' => $crypto->name,
-                    'message' => 'Price history not available at the moment'
-                ]);
-            }
-            
-            // Log successful response (without sensitive data)
-            \Log::info('Successfully fetched price history', [
-                'crypto_id' => $crypto->id,
-                'data_points' => count($history['prices'] ?? [])
-            ]);
-            
+        if (!$history) {
             return response()->json([
-                'data' => $history,
-                'crypto_id' => $crypto->id,
-                'symbol' => $crypto->symbol,
-                'name' => $crypto->name,
-                'message' => 'Price history retrieved successfully'
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Price history error: ' . $e->getMessage(), [
-                'exception' => $e,
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            // Return empty data structure on error
-            return response()->json([
-                'data' => [
-                    'prices' => [],
-                    'market_caps' => [],
-                    'total_volumes' => []
-                ],
-                'message' => 'Error fetching price history',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ]);
+                'message' => 'Failed to fetch price history',
+                'data' => []
+            ], 500);
         }
+
+        return response()->json([
+            'data' => $history
+        ]);
     }
 }

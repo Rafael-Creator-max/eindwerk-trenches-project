@@ -11,14 +11,16 @@ Route::get('/user', function (Request $request) {
 
 // Public cryptocurrency routes
 Route::get('cryptocurrencies', [CryptocurrencyController::class, 'index']);
-Route::get('cryptocurrencies/{cryptocurrency}', [CryptocurrencyController::class, 'show']);
+Route::get('cryptocurrencies/{id}', [CryptocurrencyController::class, 'show']);
+Route::get('cryptocurrencies/{id}/chart', [CryptocurrencyController::class, 'priceHistory']);
 Route::get('cryptocurrencies/trending', [CryptocurrencyController::class, 'trending']);
 
 // Protected routes (require authentication)
 Route::middleware('auth:api')->group(function () {
     // Follow/Unfollow routes
-Route::post('cryptocurrencies/{cryptocurrency}/follow', [CryptocurrencyController::class, 'follow']); Route::delete('cryptocurrencies/{cryptocurrency}/follow', [CryptocurrencyController::class, 'unfollow']);
+    Route::post('cryptocurrencies/{id}/follow', [CryptocurrencyController::class, 'follow']);
+    Route::delete('cryptocurrencies/{id}/follow', [CryptocurrencyController::class, 'unfollow']);
     
-// Get user's followed cryptocurrencies
+    // Get user's followed cryptocurrencies
     Route::get('user/cryptocurrencies', [CryptocurrencyController::class, 'followed']);
 });

@@ -15,7 +15,8 @@ class Cryptocurrency extends Model
         'current_price',
         'market_cap',
         'volume_24h',
-        'price_change_24h'
+        'price_change_24h',
+        'image_url'
     ];
 
     protected $casts = [
