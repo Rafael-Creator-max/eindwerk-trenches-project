@@ -15,18 +15,29 @@ return [
     */
 
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register'],
+    'paths' => ['api/*', 'login', 'logout', 'user', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'https://your-production-domain.com',
+    ],
 
     'allowed_origins_patterns' => [],
 
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+        'Authorization',
+        'Content-Type',
+        'X-Requested-With',
+        'X-XSRF-TOKEN',
+        'Accept',
+        'X-Socket-Id',
+    ],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['*'],
 
 
     'max_age' => 0,
