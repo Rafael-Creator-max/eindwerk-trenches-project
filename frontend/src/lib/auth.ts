@@ -17,114 +17,31 @@ type AuthResponse = {
   user: User;
 };
 
-// Get CSRF token from the server
-export const getCSRFToken = async (): Promise<void> => {
-  const url = '/sanctum/csrf-cookie';
-  console.log(`[CSRF] Fetching CSRF token from: ${api.defaults.baseURL}${url}`);
-  
-  try {
-    // First, clear any existing XSRF-TOKEN
-    document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    
-    const response = await api.get(url, {
-      withCredentials: true,
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      validateStatus: (status) => status >= 200 && status < 300, // Only consider 2xx as success
-    });
-    
-    console.log('[CSRF] Response status:', response.status);
-    console.log('[CSRF] Response headers:', JSON.stringify(response.headers, null, 2));
-    console.log('[CSRF] Set-Cookie header:', response.headers['set-cookie']);
-    
-    // Check if the XSRF-TOKEN cookie was set
-    const cookies = document.cookie.split(';').map(c => c.trim());
-    console.log('[CSRF] Current cookies:', cookies);
-    
-    const xsrfToken = cookies.find(cookie => cookie.startsWith('XSRF-TOKEN='));
-    
-    if (!xsrfToken) {
-      console.warn('[CSRF] XSRF-TOKEN cookie not found after request');
-      // Try to extract from response headers as fallback
-      const setCookieHeader = response.headers['set-cookie'] || [];
-      const xsrfCookie = setCookieHeader.find((c: string) => c.includes('XSRF-TOKEN='));
-      
-      if (xsrfCookie) {
-        console.log('[CSRF] Found XSRF-TOKEN in Set-Cookie header');
-        // Manually set the cookie
-        document.cookie = xsrfCookie.split(';')[0] + '; Path=/';
-      } else {
-        console.warn('[CSRF] XSRF-TOKEN not found in Set-Cookie header');
-      }
-    } else {
-      console.log('[CSRF] XSRF-TOKEN found in cookies:', xsrfToken.split('=')[1].substring(0, 10) + '...');
-    }
-    
-    return;
-    
-  } catch (error: any) {
-    const errorDetails = {
-      message: error.message,
-      code: error.code,
-      name: error.name,
-      stack: error.stack,
-      config: {
-        url: error.config?.url,
-        baseURL: error.config?.baseURL,
-        withCredentials: error.config?.withCredentials,
-        headers: error.config?.headers,
-      },
-      response: error.response ? {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        headers: error.response.headers,
-        data: error.response.data,
-      } : undefined,
-    };
-    
-    console.error('[CSRF] Failed to get CSRF token. Details:', JSON.stringify(errorDetails, null, 2));
-    
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      throw new Error(`Failed to get CSRF token: ${error.response.status} ${error.response.statusText}`);
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('Request to get CSRF token timed out. Is the backend server running?');
-    } else if (error.request) {
-      // The request was made but no response was received
-      throw new Error('No response received from server while fetching CSRF token. Check: ' +
-        '1. Is the backend server running? ' +
-        '2. Is CORS properly configured on the backend? ' +
-        '3. Are you using the correct backend URL?');
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      throw new Error(`Error setting up CSRF token request: ${error.message}`);
-    }
-  }
-};
+// Re-export getCSRFToken from api
+import { getCSRFToken } from './api';
 
 export const login = async (email: string, password: string): Promise<User> => {
   try {
     console.log('[Auth] Starting login process...');
     
-    // First, get the CSRF token
+    // First, ensure we have a CSRF token
     console.log('[Auth] Getting CSRF token...');
-    await getCSRFToken();
+    const token = await getCSRFToken();
+    
+    if (!token) {
+      throw new Error('Could not retrieve CSRF token. Please try again.');
+    }
     
     // Perform the login
     console.log('[Auth] Sending login request...');
-    const response = await api.post<AuthResponse>('/login', {
-      email,
-      password,
-      remember: true,
-    }, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await api.post<AuthResponse>(
+      '/login',
+      { email, password, remember: true },
+      {
+        withCredentials: true,
+        validateStatus: (status) => status < 500, // Don't throw for 4xx errors
+      }
+    );
     
     console.log('[Auth] Login response:', {
       status: response.status,
@@ -132,15 +49,38 @@ export const login = async (email: string, password: string): Promise<User> => {
       headers: response.headers,
     });
     
+    // Handle non-2xx responses
+    if (response.status >= 400) {
+      const errorData = response.data as any;
+      let errorMessage = 'Login failed';
+      
+      if (response.status === 422 && errorData.errors) {
+        // Validation errors
+        errorMessage = Object.entries(errorData.errors)
+          .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
+          .join('\n');
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
     // Get the user data
     console.log('[Auth] Fetching user data...');
     const userResponse = await api.get<User>('/api/user', {
       headers: {
         'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
       },
+      withCredentials: true,
     });
     
-    console.log('[Auth] User data received:', userResponse.data);
+    if (!userResponse.data) {
+      throw new Error('Failed to fetch user data after login');
+    }
+    
+    console.log('[Auth] Login successful, user data received');
     return userResponse.data;
     
   } catch (error: any) {
@@ -154,53 +94,85 @@ export const login = async (email: string, password: string): Promise<User> => {
       } : 'No response',
     });
     
-    let errorMessage = 'Failed to log in';
-    
-    if (error.response) {
-      if (error.response.status === 422) {
-        // Validation error
-        const errors = error.response.data.errors;
-        errorMessage = Object.values(errors).flat().join('\n');
-      } else if (error.response.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+    // Rethrow the error with a user-friendly message
+    if (error.message) {
+      throw error; // Already has a good message
+    } else if (error.response) {
+      throw new Error('Login failed. Please check your credentials and try again.');
     } else if (error.request) {
-      errorMessage = 'No response from server. Please check your connection.';
+      throw new Error('No response from server. Please check your internet connection.');
+    } else {
+      throw new Error('An unexpected error occurred during login.');
     }
-    
-    throw new Error(errorMessage);
   }
 };
 
 export const register = async (name: string, email: string, password: string, password_confirmation: string): Promise<User> => {
-  try {
-    await getCSRFToken();
-    await api.post('/register', {
-      name,
-      email,
-      password,
-      password_confirmation,
-    });
+  // Ensure we have a CSRF token first
+  const token = await getCSRFToken();
+  if (!token) {
+    throw new Error('Could not retrieve CSRF token. Please try again.');
+  }
+  
+  const response = await api.post<AuthResponse>(
+    '/register',
+    { name, email, password, password_confirmation },
+    {
+      withCredentials: true,
+      validateStatus: (status) => status < 500,
+    }
+  );
+  
+  if (response.status >= 400) {
+    const errorData = response.data as any;
+    let errorMessage = 'Registration failed';
     
-    // After registration, log the user in
-    const userResponse = await api.get<User>('/api/user');
-    return userResponse.data;
-  } catch (error: any) {
-    console.error('Registration error:', error);
-    const errorMessage = error.response?.data?.message || 'Failed to create an account';
+    if (errorData?.errors) {
+      const errorMessages = Object.values(errorData.errors).flat();
+      errorMessage = errorMessages.join('\n');
+    } else if (errorData?.message) {
+      errorMessage = errorData.message;
+    }
+    
     throw new Error(errorMessage);
   }
+  
+  return response.data.user || response.data;
 };
 
 export const logout = async (): Promise<void> => {
   try {
-    await getCSRFToken();
-    await api.post('/logout');
+    // Ensure we have a CSRF token first
+    const token = await getCSRFToken();
+    if (!token) {
+      console.warn('No CSRF token found for logout');
+    }
+    
+    // Perform the logout request
+    await api.post('/logout', {}, { 
+      withCredentials: true,
+      validateStatus: (status) => status < 500,
+    });
+    
+    // Clear any cached user data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+    }
+    
+    // Clear the CSRF token
+    document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    
   } catch (error) {
     console.error('Logout error:', error);
+    // Even if logout fails, clear local state
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+    }
     throw error;
-  } finally {
-    localStorage.removeItem('auth_token');
   }
 };
 

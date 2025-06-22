@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Debug log environment variables
 console.log('Environment:', {
@@ -9,15 +9,13 @@ console.log('Environment:', {
 
 // Determine the base URL
 const getBaseUrl = () => {
-  // If NEXT_PUBLIC_API_URL is set, use it
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+  // Always use the full URL in development to avoid CORS issues with DDEV
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'development') {
+    return process.env.NEXT_PUBLIC_API_URL || 'https://backend.ddev.site';
   }
   
-  // Otherwise, use default based on environment
-  return process.env.NODE_ENV === 'production' 
-    ? 'https://backend.ddev.site' 
-    : 'http://localhost:8000';
+  // In production, use relative URLs
+  return '';
 };
 
 const baseURL = getBaseUrl();
@@ -46,250 +44,144 @@ api.interceptors.request.use(
   }
 );
 
-// Request interceptor to add auth token if it exists
+// Request interceptor to add CSRF token if it exists
 api.interceptors.request.use(
   async (config) => {
-    console.log('Making request to:', config.url);
+    // Skip for these endpoints to avoid infinite loops
+    if (config.url?.includes('/sanctum/csrf-cookie')) {
+      return config;
+    }
+
+    // Get the token from cookies
+    const cookies = document.cookie.split('; ');
+    const xsrfToken = cookies.find(row => row.startsWith('XSRF-TOKEN='))?.split('=')[1];
     
-    // Get the token from the cookie
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('XSRF-TOKEN='))
-      ?.split('=')[1];
-      
-    if (token) {
-      config.headers['X-XSRF-TOKEN'] = decodeURIComponent(token);
-      console.log('Added XSRF-TOKEN to request headers');
+    if (xsrfToken) {
+      const decodedToken = decodeURIComponent(xsrfToken);
+      config.headers['X-XSRF-TOKEN'] = decodedToken;
+      config.headers['X-Requested-With'] = 'XMLHttpRequest';
+      console.log(`[API] Added X-XSRF-TOKEN to ${config.method?.toUpperCase()} ${config.url}`);
     } else {
-      console.log('No XSRF-TOKEN found in cookies');
+      console.log(`[API] No XSRF-TOKEN found for ${config.method?.toUpperCase()} ${config.url}`);
     }
     
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    console.error('[API] Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Helper function to safely extract error details without causing circular references
+// Helper function to safely extract error details
 const getErrorDetails = (error: any): Record<string, unknown> => {
-  // Handle non-error values
   if (!error || typeof error !== 'object') {
     return { value: error };
   }
 
-  // Handle circular references by tracking seen objects
-  const seen = new WeakSet();
-  
-  const safeStringify = (obj: any, space = 2): string => {
-    const replacer = (key: string, value: any) => {
-      // Skip certain keys that might cause issues
-      if (key === 'config' && value?.headers) {
-        const { headers, ...rest } = value;
-        return {
-          ...rest,
-          headers: '[REDACTED]',
-        };
-      }
-      
-      // Handle circular references
-      if (typeof value === 'object' && value !== null) {
-        if (seen.has(value)) return '[Circular]';
-        seen.add(value);
-      }
-      
-      // Handle special cases
-      if (value instanceof Error) {
-        const errorObj: Record<string, any> = {};
-        Object.getOwnPropertyNames(value).forEach(key => {
-          errorObj[key] = (value as any)[key];
-        });
-        return errorObj;
-      }
-      
-      return value;
-    };
-    
-    try {
-      return JSON.stringify(obj, replacer, space);
-    } catch (e) {
-      return `[Error stringifying: ${String(e)}]`;
-    }
-  };
-  
-  // Special handling for Axios errors
   if (error.isAxiosError) {
     const { config, request, response, ...rest } = error;
-    
-    // Safely extract config details
-    let configDetails = {};
-    if (config) {
-      const { headers, ...restConfig } = config;
-      configDetails = {
-        ...restConfig,
-        headers: '[REDACTED]',
-      };
-    }
-    
-    // Safely extract response details
-    let responseDetails = {};
-    if (response) {
-      const { config: resConfig, request: resRequest, ...restResponse } = response;
-      responseDetails = {
-        ...restResponse,
-        config: resConfig ? '[Response Config]' : undefined,
-        request: resRequest ? '[Response Request]' : undefined,
-      };
-    }
-    
     return {
       isAxiosError: true,
       message: error.message,
       code: error.code,
-      config: configDetails,
-      response: responseDetails,
-      request: request ? '[Request object]' : undefined,
+      config: config ? { url: config.url, method: config.method } : undefined,
+      status: response?.status,
+      statusText: response?.statusText,
+      data: response?.data,
       ...rest,
     };
   }
   
-  // Handle regular errors
-  if (error instanceof Error) {
-    const { name, message, stack } = error;
-    return { name, message, stack };
-  }
-  
-  // Handle other objects
-  return { ...error };
+  return { message: error.message, stack: error.stack };
 };
 
 // Response interceptor for better error handling
 api.interceptors.response.use(
   (response) => {
-    try {
-      console.log('[API] Response:', {
-        method: response.config.method?.toUpperCase(),
-        url: response.config.url,
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data
-      });
-    } catch (e) {
-      console.error('[API] Error logging response:', e);
-    }
+    console.log('[API] Response:', {
+      method: response.config.method?.toUpperCase(),
+      url: response.config.url,
+      status: response.status,
+      statusText: response.statusText,
+    });
     return response;
   },
-  (error) => {
-    try {
-      // Get safe error details first
-      const errorDetails = getErrorDetails(error);
-      
-      // Log basic error info
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        const { status, statusText } = error.response;
-        
-        // Handle specific status codes
-        if (status === 401) {
-          console.warn('[API] Unauthorized - User might need to log in');
-        } else if (status === 403) {
-          console.warn('[API] Forbidden - Missing or invalid permissions');
-        } else if (status === 404) {
-          console.warn('[API] Not Found - The requested resource was not found');
-        } else if (status === 419) {
-          console.warn('[API] CSRF Token Mismatch - Page has expired, please refresh');
-        } else if (status >= 500) {
-          console.error('[API] Server Error - Something went wrong on the server');
-        } else {
-          console.warn(`[API] Received status ${status} ${statusText}`);
-        }
-        
-        // Log response data if available
-        if (error.response.data) {
-          console.warn('[API] Response data:', error.response.data);
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('[API] No Response Received - The request was made but no response was received');
-        console.error('[API] Request details:', {
-          method: error.config?.method?.toUpperCase(),
-          url: error.config?.url,
-          baseURL: error.config?.baseURL,
-          timeout: error.config?.timeout,
-        });
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('[API] Request Setup Error - Error setting up the request');
-      }
-      
-      // Log the full error details in a separate console group
-      console.groupCollapsed('[API] Error Details');
-      try {
-        console.error('Error message:', error.message);
-        console.error('Error code:', error.code);
-        console.error('Error details:', JSON.stringify(errorDetails, null, 2));
-        if (error.stack) {
-          console.error('Stack trace:', error.stack);
-        }
-      } catch (e) {
-        console.error('Error while logging error details:', e);
-      }
-      console.groupEnd();
-      
-    } catch (loggingError) {
-      // If we get here, something went very wrong with error handling
-      console.error('[API] Critical error in error handler:', loggingError);
-      console.error('Original error message:', error?.message || 'No error message');
-    }
-    
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor to handle 401 Unauthorized
-api.interceptors.response.use(
-  (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const errorDetails = getErrorDetails(error);
+    console.error('[API] Request failed:', errorDetails);
     
-    // If the error is 401 and we haven't tried to refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    // Handle 401 Unauthorized
+    if (error.response?.status === 401) {
+      console.log('[API] Unauthorized - User might need to log in');
       
-      try {
-        // Try to refresh the token
-        await getCSRFToken();
-        const refreshResponse = await axios.post(
-          'http://localhost:8000/api/refresh-token',
-          {},
-          { withCredentials: true }
-        );
-        
-        const { token } = refreshResponse.data;
-        localStorage.setItem('auth_token', token);
-        
-        // Retry the original request with the new token
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api(originalRequest);
-      } catch (error) {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
+      // If this is a retry after a token refresh, don't try again
+      if (error.config._retry) {
+        console.log('[API] Already retried request, redirecting to login');
+        // Clear any existing tokens
+        document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        // Redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
+      
+      // Try to refresh the token
+      error.config._retry = true;
+      try {
+        console.log('[API] Attempting to refresh token...');
+        const token = await getCSRFToken();
+        
+        if (token) {
+          console.log('[API] Token refreshed, retrying original request');
+          // Update the token in the headers
+          error.config.headers['X-XSRF-TOKEN'] = token;
+          return api(error.config);
+        } else {
+          throw new Error('Failed to refresh CSRF token');
+        }
+      } catch (refreshError) {
+        console.error('[API] Token refresh failed:', refreshError);
+        // Clear any existing tokens
+        document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        // Redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
     }
     
+    // Handle other errors
     return Promise.reject(error);
   }
 );
 
 // Ensures CSRF token is set for Sanctum
-export const getCSRFToken = async () => {
-  await axios.get('http://localhost:8000/sanctum/csrf-cookie', { 
-    withCredentials: true 
-  });
+export const getCSRFToken = async (): Promise<string | null> => {
+  try {
+    const response = await axios.get('/sanctum/csrf-cookie', {
+      withCredentials: true,
+      baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backend.ddev.site'
+    });
+    
+    // Get the token from cookies
+    const cookies = document.cookie.split('; ');
+    const xsrfCookie = cookies.find(row => row.startsWith('XSRF-TOKEN='));
+    
+    if (xsrfCookie) {
+      const token = decodeURIComponent(xsrfCookie.split('=')[1]);
+      console.log('[API] Retrieved CSRF token');
+      return token;
+    }
+    
+    console.warn('[API] No XSRF-TOKEN found in cookies after request');
+    return null;
+  } catch (error) {
+    console.error('[API] Failed to get CSRF token:', error);
+    return null;
+  }
 };
 
 export default api;
