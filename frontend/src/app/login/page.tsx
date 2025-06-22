@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,7 +13,42 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    // Only run this effect on the client side
+    if (typeof window === 'undefined') return;
+    
+    // Get the redirect URL from the query parameters first
+    const urlParams = new URLSearchParams(window.location.search);
+    let from = urlParams.get('from') || '/dashboard';
+    
+    // Ensure we don't redirect back to login
+    if (from.startsWith('/login')) {
+      from = '/dashboard';
+    }
+    
+    console.log('LoginPage - Auth state:', { 
+      isAuthenticated, 
+      loading, 
+      path: window.location.pathname,
+      from 
+    });
+    
+    // Only redirect if we're authenticated and not loading
+    if (isAuthenticated && !loading) {
+      console.log('LoginPage - User is authenticated, redirecting to:', from);
+      
+      // Use a small timeout to ensure the state is fully updated
+      const timer = setTimeout(() => {
+        console.log('LoginPage - Executing redirect to:', from);
+        window.location.href = from; // Force a full page reload
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, loading]);
 
   // Function to add logs to the state
   const addLog = (message: string) => {
@@ -20,61 +57,70 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    // Completely prevent default form behavior
-    if (e) {
-      if (e.preventDefault) e.preventDefault();
-      if (e.stopPropagation) e.stopPropagation();
-      if (e.cancelable !== false) {
-        e.preventDefault();
-      }
-      // Prevent default for older browsers
-      if (window.event) {
-        (window.event as any).returnValue = false;
-      }
-    }
+    e.preventDefault();
+    e.stopPropagation();
     
-    addLog('=== Form submission started ===');
+    // Clear any previous errors
     setError('');
     setLoading(true);
-
+    addLog('=== Form submission started ===');
+    addLog(`Attempting to log in with: ${email}`);
+    
     try {
-      addLog(`Attempting to log in with: ${email}`);
+      console.log('Starting login process...');
+      addLog('Authenticating...');
       
-      // Add a small delay to help with debugging
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Perform the login
       const user = await login(email, password);
-      addLog('Login API call completed');
+      console.log('Login successful, user:', user);
+      addLog('Authentication successful');
       
-      // Show success message for 5 seconds
-      const successMsg = 'Login successful! (Page reload prevented for debugging)';
-      setError(successMsg);
-      addLog(successMsg);
+      // Get the redirect URL from query params or default to dashboard
+      const urlParams = new URLSearchParams(window.location.search);
+      let redirectTo = urlParams.get('from') || '/dashboard';
       
-    } catch (error: any) {
-      addLog('Login failed with error: ' + (error?.message || 'Unknown error'));
+      // Ensure we don't redirect back to login
+      if (redirectTo.startsWith('/login')) {
+        redirectTo = '/dashboard';
+      }
       
+      console.log('Redirecting to:', redirectTo);
+      addLog(`Redirecting to: ${redirectTo}`);
+      
+      // Use replace to prevent going back to login page
+      router.replace(redirectTo);
+      
+    } catch (error: unknown) {
+      console.error('Login error:', error);
       let errorMessage = 'Failed to log in';
       
-      // Handle specific error cases
-      if (error?.message?.includes('401') || error?.response?.status === 401) {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (error?.message?.includes('network') || error?.code === 'ERR_NETWORK') {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (error?.message?.includes('timeout') || error?.code === 'ECONNABORTED') {
-        errorMessage = 'Request timed out. Please try again.';
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
+      const err = error as { 
+        response?: { 
+          status?: number;
+          data?: { message?: string } 
+        }; 
+        request?: unknown; 
+        message?: string 
+      };
+      
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        if (err.response.status === 401) {
+          errorMessage = 'Invalid email or password';
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err.request) {
+        // The request was made but no response was received
+        errorMessage = 'No response from server. Please check your internet connection.';
+      } else if (err.message) {
+        // Something happened in setting up the request
+        errorMessage = err.message;
       }
       
       setError(errorMessage);
-      addLog('Error details: ' + JSON.stringify({
-        message: error?.message,
-        code: error?.code,
-        status: error?.response?.status,
-        data: error?.response?.data
-      }, null, 2));
-      
+      addLog(`Login failed: ${errorMessage}`);
     } finally {
       setLoading(false);
       addLog('=== Form submission completed ===');

@@ -23,34 +23,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const loadUser = async () => {
       try {
+        console.log('Loading user...');
         const currentUser = await auth.getCurrentUser();
-        setUser(currentUser);
-        setIsAuthenticated(!!currentUser);
+        console.log('Current user loaded:', currentUser);
+        
+        if (isMounted) {
+          setUser(currentUser);
+          setIsAuthenticated(!!currentUser);
+        }
       } catch (error) {
         console.error('Failed to load user', error);
-        setUser(null);
-        setIsAuthenticated(false);
+        if (isMounted) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadUser();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setError(null);
     setLoading(true);
     try {
+      console.log('AuthContext: Attempting login...');
       const user = await auth.login(email, password);
+      console.log('AuthContext: Login successful, user:', user);
+      
+      // Use the user returned by login directly
       setUser(user);
-      setIsAuthenticated(true);
+      setIsAuthenticated(!!user);
       return user;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to log in';
+    } catch (error: unknown) {
+      console.error('AuthContext: Login error:', error);
+      const err = error as { 
+        response?: { data?: { message?: string } }; 
+        message?: string 
+      };
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to log in';
       setError(errorMessage);
+      // Clear any potentially invalid auth state
+      setUser(null);
+      setIsAuthenticated(false);
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -65,8 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user);
       setIsAuthenticated(true);
       return user;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to create an account';
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      const errorMessage = err.message || 'Failed to create an account';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -80,9 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await auth.logout();
       setUser(null);
       setIsAuthenticated(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to log out', error);
-      const errorMessage = error.message || 'Failed to log out';
+      const err = error as { message?: string };
+      const errorMessage = err.message || 'Failed to log out';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

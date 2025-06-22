@@ -4,127 +4,136 @@ export type User = {
   id: number;
   name: string;
   email: string;
-  email_verified_at?: string;
-  two_factor_confirmed_at?: string | null;
-  current_team_id?: number | null;
-  profile_photo_path?: string | null;
+  email_verified_at?: string | null;
   created_at: string;
   updated_at: string;
-  profile_photo_url?: string;
 };
 
-type AuthResponse = {
+type LoginResponse = {
+  access_token: string;
+  token_type: string;
   user: User;
 };
-
-// Re-export getCSRFToken from api
-import { getCSRFToken } from './api';
 
 export const login = async (email: string, password: string): Promise<User> => {
   try {
     console.log('[Auth] Starting login process...');
     
-    // First, ensure we have a CSRF token
-    console.log('[Auth] Getting CSRF token...');
-    const token = await getCSRFToken();
-    
-    if (!token) {
-      throw new Error('Could not retrieve CSRF token. Please try again.');
+    // Clear any existing token
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
     }
+    delete api.defaults.headers.common['Authorization'];
     
     // Perform the login
     console.log('[Auth] Sending login request...');
-    const response = await api.post<AuthResponse>(
+    const response = await api.post<LoginResponse>(
       '/login',
-      { email, password, remember: true },
+      { email, password },
       {
         withCredentials: true,
-        validateStatus: (status) => status < 500, // Don't throw for 4xx errors
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
       }
     );
     
     console.log('[Auth] Login response:', {
       status: response.status,
       statusText: response.statusText,
-      headers: response.headers,
+      data: response.data
     });
     
-    // Handle non-2xx responses
-    if (response.status >= 400) {
-      const errorData = response.data as any;
-      let errorMessage = 'Login failed';
-      
-      if (response.status === 422 && errorData.errors) {
-        // Validation errors
-        errorMessage = Object.entries(errorData.errors)
-          .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
-          .join('\n');
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
+    // Save the token to cookies and set it in the API client
+    if (response.data.access_token) {
+      const token = response.data.access_token;
+      console.log('[Auth] Saving token to localStorage');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', token);
       }
       
-      throw new Error(errorMessage);
+      // Update the default Authorization header for subsequent requests
+      console.log('[Auth] Setting Authorization header');
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // If we have user data in the response, return it
+      if (response.data.user) {
+        console.log('[Auth] User data received in login response:', response.data.user);
+        return response.data.user;
+      }
+      
+      // Otherwise, fetch the user data
+      console.log('[Auth] Fetching user data...');
+      try {
+        const userResponse = await api.get<User>('/user');
+        console.log('[Auth] User data fetched successfully');
+        return userResponse.data;
+      } catch (userError) {
+        console.error('[Auth] Failed to fetch user data:', userError);
+        throw new Error('Logged in but failed to load user profile');
+      }
     }
     
-    // Get the user data
-    console.log('[Auth] Fetching user data...');
-    const userResponse = await api.get<User>('/api/user', {
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      withCredentials: true,
-    });
+    throw new Error('No access token received in response');
     
-    if (!userResponse.data) {
-      throw new Error('Failed to fetch user data after login');
-    }
-    
-    console.log('[Auth] Login successful, user data received');
-    return userResponse.data;
-    
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as {
+      message?: string;
+      response?: {
+        status?: number;
+        statusText?: string;
+        data?: {
+          message?: string;
+          errors?: Record<string, string[]>;
+        };
+      };
+      request?: unknown;
+    };
+
     console.error('[Auth] Login error:', {
-      message: error.message,
-      code: error.code,
-      response: error.response ? {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
+      message: err.message,
+      response: err.response ? {
+        status: err.response.status,
+        statusText: err.response.statusText,
+        data: err.response.data,
       } : 'No response',
     });
     
-    // Rethrow the error with a user-friendly message
-    if (error.message) {
-      throw error; // Already has a good message
-    } else if (error.response) {
-      throw new Error('Login failed. Please check your credentials and try again.');
-    } else if (error.request) {
-      throw new Error('No response from server. Please check your internet connection.');
+    // Clear any potentially invalid auth state
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    delete api.defaults.headers.common['Authorization'];
+    
+    // Format error message from response if available
+    if (err.response?.data?.message) {
+      throw new Error(err.response.data.message);
+    } else if (err.response?.data?.errors) {
+      // Handle validation errors
+      const errorMessages = Object.values(err.response.data.errors)
+        .flat()
+        .join('\n');
+      throw new Error(errorMessages || 'Validation failed');
+    } else if (err.message) {
+      throw new Error(err.message);
     } else {
-      throw new Error('An unexpected error occurred during login.');
+      throw new Error('An unknown error occurred during login');
     }
   }
 };
 
 export const register = async (name: string, email: string, password: string, password_confirmation: string): Promise<User> => {
-  // Ensure we have a CSRF token first
-  const token = await getCSRFToken();
-  if (!token) {
-    throw new Error('Could not retrieve CSRF token. Please try again.');
-  }
-  
-  const response = await api.post<AuthResponse>(
+  const response = await api.post<LoginResponse>(
     '/register',
-    { name, email, password, password_confirmation },
-    {
-      withCredentials: true,
-      validateStatus: (status) => status < 500,
-    }
+    { name, email, password, password_confirmation }
   );
   
   if (response.status >= 400) {
-    const errorData = response.data as any;
+    const errorData = response.data as {
+      errors?: Record<string, string[]>;
+      message?: string;
+    };
     let errorMessage = 'Registration failed';
     
     if (errorData?.errors) {
@@ -137,42 +146,31 @@ export const register = async (name: string, email: string, password: string, pa
     throw new Error(errorMessage);
   }
   
-  return response.data.user || response.data;
+  if (!response.data.user) {
+    throw new Error('No user data received');
+  }
+  
+  console.log('[Auth] Registration successful, user:', response.data.user);
+  return response.data.user;
 };
 
 export const logout = async (): Promise<void> => {
   try {
-    // Ensure we have a CSRF token first
-    const token = await getCSRFToken();
-    if (!token) {
-      console.warn('No CSRF token found for logout');
-    }
+    console.log('[Auth] Starting logout process...');
     
-    // Perform the logout request
-    await api.post('/logout', {}, { 
-      withCredentials: true,
-      validateStatus: (status) => status < 500,
-    });
+    // Perform the logout
+    console.log('[Auth] Sending logout request...');
+    await api.post('/logout');
     
-    // Clear any cached user data
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user');
-      sessionStorage.removeItem('user');
-      localStorage.removeItem('auth_token');
-    }
-    
-    // Clear the CSRF token
-    document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    
-  } catch (error) {
-    console.error('Logout error:', error);
-    // Even if logout fails, clear local state
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user');
-      sessionStorage.removeItem('user');
-      localStorage.removeItem('auth_token');
-    }
-    throw error;
+    console.log('[Auth] Logout successful');
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error('[Auth] Logout error:', err.message || 'Unknown error');
+    // Continue with cleanup even if the request fails
+  } finally {
+    // Always clear the token and any user data
+    localStorage.removeItem('token');
+    console.log('[Auth] Token removed from localStorage');
   }
 };
 
@@ -180,58 +178,56 @@ export const logout = async (): Promise<void> => {
 let userRequest: Promise<User | null> | null = null;
 
 export const getCurrentUser = async (): Promise<User | null> => {
-  console.log('[Auth] Getting current user...');
-  // Return the existing request if it's in progress to prevent duplicate requests
+  // If we already have a request in progress, return that instead of making a new one
   if (userRequest) {
     console.log('[Auth] Using existing user request');
     return userRequest;
   }
-
+  
+  // If we have a token in localStorage, try to get the user
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.log('[Auth] No token found in localStorage');
+    return null;
+  }
+  
+  console.log('[Auth] Getting current user...');
+  
   try {
-    userRequest = (async () => {
+    userRequest = (async (): Promise<User | null> => {
       try {
-        // First ensure we have a CSRF token
-        try {
-          await getCSRFToken();
-        } catch (csrfError) {
-          console.warn('[Auth] CSRF token fetch failed, but continuing with user check:', csrfError);
-          // Continue anyway, as the user might already be authenticated
-        }
+        // Get the user
+        const response = await api.get<User>('/user');
         
-        console.log('[Auth] Fetching current user...');
-        const response = await api.get<User>('/api/user', {
-          // Don't retry on 401 to prevent infinite loops
-          validateStatus: (status) => status === 200 || status === 401,
+        console.log('[Auth] Current user response:', {
+          status: response.status,
+          statusText: response.statusText,
         });
         
         if (response.status === 200) {
-          console.log('[Auth] Current user:', response.data);
+          console.log('[Auth] User authenticated:', response.data);
           return response.data;
-        } else if (response.status === 401) {
-          console.log('[Auth] No authenticated user found');
-          return null;
-        } else {
-          console.warn('[Auth] Unexpected status code when fetching user:', response.status);
-          return null;
         }
-      } catch (error: any) {
-        console.error('[Auth] Failed to get current user:', {
-          message: error.message,
-          code: error.code,
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          url: error.config?.url,
-        });
+        
+        // If we get here, the token might be invalid
+        console.warn('[Auth] Failed to get current user, status:', response.status);
+        localStorage.removeItem('token');
+        return null;
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        console.error('[Auth] Error getting current user:', err.message || 'Unknown error');
+        localStorage.removeItem('token');
         return null;
       } finally {
-        // Clear the request cache when done
+        // Clear the request promise so we can try again
         userRequest = null;
       }
     })();
-
+    
     return await userRequest;
-  } catch (error) {
-    console.error('[Auth] Unexpected error in getCurrentUser:', error);
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error('[Auth] Error in getCurrentUser:', err.message || 'Unknown error');
     userRequest = null;
     return null;
   }
@@ -242,7 +238,18 @@ export const isAuthenticated = async (): Promise<boolean> => {
     const user = await getCurrentUser();
     return !!user;
   } catch (error) {
-    console.error('Authentication check failed:', error);
+    console.error('Error checking authentication status:', error);
     return false;
   }
+};
+
+
+// Helper function to get the auth token
+export const getAuthToken = (): string | null => {
+  return localStorage.getItem('token');
+};
+
+// Helper function to set the auth token
+export const setAuthToken = (token: string): void => {
+  localStorage.setItem('token', token);
 };

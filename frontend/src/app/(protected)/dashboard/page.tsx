@@ -1,23 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import FollowedCryptos from '@/components/FollowedCryptos';
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
-    } else {
-      setLoading(false);
+    // If not loading and not authenticated, redirect to login
+    if (!authLoading && !isAuthenticated) {
+      console.log('Dashboard: Not authenticated, redirecting to login');
+      router.replace(`/login?from=${encodeURIComponent('/dashboard')}`);
     }
-  }, [user, router]);
+  }, [isAuthenticated, authLoading, router]);
 
-  if (loading) {
+  // Show loading state while checking auth
+  if (authLoading || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -53,7 +54,15 @@ export default function DashboardPage() {
                 </div>
               </div>
               <button
-                onClick={logout}
+                onClick={() => {
+                  console.log('Logging out...');
+                  logout().then(() => {
+                    console.log('Logout successful, redirecting to home...');
+                    router.push('/');
+                  }).catch(error => {
+                    console.error('Logout error:', error);
+                  });
+                }}
                 className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Sign out
@@ -68,12 +77,16 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         </div>
       </header>
-      <main>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-              <p className="text-gray-500">Your cryptocurrency dashboard will appear here</p>
-            </div>
+      <main className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white shadow rounded-lg p-6 mb-8">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Welcome back, {user?.name}!</h2>
+            <p className="text-gray-600">Here are the cryptocurrencies you&apos;re following.</p>
+          </div>
+          
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Your Watchlist</h3>
+            <FollowedCryptos />
           </div>
         </div>
       </main>

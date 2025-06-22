@@ -27,8 +27,9 @@ export default function RegisterPage() {
     try {
       await register(name, email, password, passwordConfirmation);
       router.push('/dashboard');
-    } catch (error: any) {
-      setError(error.message || 'Failed to create an account');
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      setError(err.message || 'Failed to create an account');
     } finally {
       setLoading(false);
     }
