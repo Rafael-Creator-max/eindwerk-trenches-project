@@ -5,9 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CryptocurrencyController;
 
 // Public routes
-Route::get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:api');
+});
 
 // Public cryptocurrency routes
 Route::get('cryptocurrencies', [CryptocurrencyController::class, 'index']);
@@ -16,7 +16,7 @@ Route::get('cryptocurrencies/{id}/chart', [CryptocurrencyController::class, 'pri
 Route::get('cryptocurrencies/trending', [CryptocurrencyController::class, 'trending']);
 
 // Protected routes (require authentication)
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     // Follow/Unfollow routes
     Route::post('cryptocurrencies/{id}/follow', [CryptocurrencyController::class, 'follow']);
     Route::delete('cryptocurrencies/{id}/follow', [CryptocurrencyController::class, 'unfollow']);

@@ -30,9 +30,6 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            // ->authUsing(function () {
-            //     return \auth()->check() && \auth()->user()->email === 'pereztarirastalin@gmail.com';
-            //     })
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
@@ -43,7 +40,6 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
-            
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
