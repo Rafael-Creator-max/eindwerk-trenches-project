@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 use App\Models\Cryptocurrency;
 use App\Models\UserCryptoFollow;
 use App\Services\CoinGeckoService;
@@ -57,22 +58,32 @@ class CryptocurrencyController extends Controller
      *
      * @group Cryptocurrency Management
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Try to get from cache first
-        $cryptos = Cache::remember('cryptocurrencies_list', now()->addMinutes($this->cacheDuration), function () {
-            return Cryptocurrency::with('assetType')
-                ->orderBy('market_cap', 'desc')
-                ->get();
-        });
-
-        // If no data in database, try to fetch from API
-        if ($cryptos->isEmpty()) {
+        $forceRefresh = $request->has('force_refresh') && $request->boolean('force_refresh');
+        
+        // If force refresh is requested, clear the cache and fetch fresh data
+        if ($forceRefresh) {
+            Cache::forget('cryptocurrencies_list');
             $this->fetchAndStoreCryptos();
-            $cryptos = Cryptocurrency::with('assetType')
+        }
+        
+        // Try to get from cache first, unless force refresh was requested
+        $cryptos = Cache::remember('cryptocurrencies_list', now()->addMinutes($this->cacheDuration), function () {
+            $cachedData = Cryptocurrency::with('assetType')
                 ->orderBy('market_cap', 'desc')
                 ->get();
-        }
+                
+            // If no data in database, try to fetch from API
+            if ($cachedData->isEmpty()) {
+                $this->fetchAndStoreCryptos();
+                return Cryptocurrency::with('assetType')
+                    ->orderBy('market_cap', 'desc')
+                    ->get();
+            }
+            
+            return $cachedData;
+        });
 
         return response()->json($cryptos);
     }
@@ -364,68 +375,136 @@ class CryptocurrencyController extends Controller
     /**
      * Get price history for a cryptocurrency
      *
-     * @param string $id
+     * @param string $id The cryptocurrency slug or ID
      * @param CoinGeckoService $coinGeckoService
      * @return \Illuminate\Http\JsonResponse
+     * 
+     * @response 200 {
+     *   "data": {
+     *     "prices": [[timestamp, price], ...],
+     *     "market_caps": [[timestamp, market_cap], ...],
+     *     "total_volumes": [[timestamp, volume], ...]
+     *   },
+     *   "crypto_id": 1,
+     *   "symbol": "BTC",
+     *   "name": "Bitcoin"
+     * }
+     * 
+     * @response 200 {
+     *   "data": {
+     *     "prices": [],
+     *     "market_caps": [],
+     *     "total_volumes": []
+     *   },
+     *   "message": "No price data available",
+     *   "crypto_id": 1,
+     *   "symbol": "BTC"
+     * }
      */
     public function priceHistory($id, CoinGeckoService $coinGeckoService)
     {
+        $startTime = microtime(true);
+        $logContext = [
+            'endpoint' => 'priceHistory',
+            'crypto_id' => $id,
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'timestamp' => now()->toDateTimeString()
+        ];
+
         try {
+            // Find the cryptocurrency
             $crypto = Cryptocurrency::where('slug', $id)
                 ->orWhere('id', $id)
                 ->firstOrFail();
 
-            $days = min((int)request()->input('days', 7), 365);
+            $logContext['crypto_id'] = $crypto->id;
+            $logContext['external_id'] = $crypto->external_id;
             
-            // Log the request
-            \Log::info('Fetching price history', [
-                'crypto_id' => $crypto->id,
-                'external_id' => $crypto->external_id,
-                'days' => $days
-            ]);
+            // Validate and get days parameter
+            $days = request()->input('days', '7');
+            $days = is_numeric($days) ? (int)$days : 7;
+            $days = max(1, min(365, $days)); // Clamp between 1 and 365 days
             
-            // Get real data from CoinGecko API
+            $logContext['days'] = $days;
+            $logContext['request_params'] = request()->all();
+            
+            Log::info('Fetching price history', $logContext);
+            
+            // Get data from CoinGecko API with retry logic
             $history = $coinGeckoService->getPriceHistory($crypto->external_id, $days);
+            $logContext['execution_time'] = round(microtime(true) - $startTime, 3) . 's';
 
-            if (!$history) {
-                \Log::warning('Failed to fetch price history from CoinGecko', [
-                    'crypto_id' => $crypto->id,
-                    'external_id' => $crypto->external_id
-                ]);
-                
-                // Return empty data structure instead of error
-                return response()->json([
-                    'data' => [
-                        'prices' => [],
-                        'market_caps' => [],
-                        'total_volumes' => []
-                    ],
-                    'crypto_id' => $crypto->id,
-                    'symbol' => $crypto->symbol,
-                    'name' => $crypto->name,
-                    'message' => 'Price history not available at the moment'
-                ]);
-            }
-            
-            // Log successful response (without sensitive data)
-            \Log::info('Successfully fetched price history', [
-                'crypto_id' => $crypto->id,
-                'data_points' => count($history['prices'] ?? [])
-            ]);
-            
-            return response()->json([
-                'data' => $history,
+            $responseData = [
+                'data' => [
+                    'prices' => [],
+                    'market_caps' => [],
+                    'total_volumes' => []
+                ],
                 'crypto_id' => $crypto->id,
                 'symbol' => $crypto->symbol,
                 'name' => $crypto->name,
-                'message' => 'Price history retrieved successfully'
-            ]);
+                'last_updated' => now()->toIso8601String()
+            ];
+
+            if (!$history || empty($history['prices'])) {
+                $logContext['status'] = 'no_data';
+                Log::warning('No price history data available', $logContext);
+                
+                $responseData['message'] = 'No price data available';
+                return response()->json($responseData);
+            }
+            
+            // Process and validate the price data
+            $prices = $history['prices'] ?? [];
+            $marketCaps = $history['market_caps'] ?? [];
+            $totalVolumes = $history['total_volumes'] ?? [];
+            
+            // Log statistics about the data
+            $logContext['data_points'] = count($prices);
+            $logContext['status'] = 'success';
+            
+            if (!empty($prices)) {
+                $firstPoint = reset($prices);
+                $lastPoint = end($prices);
+                $logContext['date_range'] = [
+                    'start' => date('Y-m-d H:i:s', $firstPoint[0] / 1000),
+                    'end' => date('Y-m-d H:i:s', $lastPoint[0] / 1000)
+                ];
+                $logContext['price_range'] = [
+                    'low' => min(array_column($prices, 1)),
+                    'high' => max(array_column($prices, 1))
+                ];
+            }
+            
+            Log::info('Successfully fetched price history', $logContext);
+            
+            // Prepare the response
+            $responseData['data'] = [
+                'prices' => $prices,
+                'market_caps' => $marketCaps,
+                'total_volumes' => $totalVolumes
+            ];
+            
+            return response()->json($responseData);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            $logContext['error'] = 'Cryptocurrency not found';
+            $logContext['exception'] = get_class($e);
+            Log::error('Cryptocurrency not found', $logContext);
+            
+            return response()->json([
+                'message' => 'Cryptocurrency not found',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 404);
             
         } catch (\Exception $e) {
-            \Log::error('Price history error: ' . $e->getMessage(), [
-                'exception' => $e,
-                'trace' => $e->getTraceAsString()
-            ]);
+            $logContext['error'] = $e->getMessage();
+            $logContext['exception'] = get_class($e);
+            $logContext['trace'] = config('app.debug') ? $e->getTraceAsString() : null;
+            $logContext['execution_time'] = round(microtime(true) - $startTime, 3) . 's';
+            
+            Log::error('Error fetching price history: ' . $e->getMessage(), $logContext);
             
             // Return empty data structure on error
             return response()->json([
@@ -434,9 +513,12 @@ class CryptocurrencyController extends Controller
                     'market_caps' => [],
                     'total_volumes' => []
                 ],
-                'message' => 'Error fetching price history',
-                'error' => config('app.debug') ? $e->getMessage() : null
-            ]);
+                'message' => 'Unable to fetch price history at this time',
+                'error' => config('app.debug') ? [
+                    'message' => $e->getMessage(),
+                    'type' => get_class($e)
+                ] : null
+            ], 500);
         }
     }
 }

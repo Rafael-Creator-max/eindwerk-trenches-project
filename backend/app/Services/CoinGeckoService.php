@@ -229,71 +229,182 @@ class CoinGeckoService
      * @param int $days
      * @return array|null
      */
-    public function getPriceHistory(string $id, int $days = 7)
+    /**
+     * Get price history for a coin with retry logic
+     *
+     * @param string $id CoinGecko coin ID
+     * @param int $days Number of days of data to fetch (1-365)
+     * @param int $maxRetries Maximum number of retry attempts
+     * @return array|null Price history data or null on failure
+     */
+    public function getPriceHistory(string $id, int $days = 7, int $maxRetries = 3)
     {
-        try {
-            $this->rateLimit();
-            
-            $url = self::API_URL . "/coins/" . urlencode($id) . "/market_chart";
-            $params = [
-                'vs_currency' => 'usd',
+        $attempt = 0;
+        $lastError = null;
+        
+        // Ensure days is within valid range (1-365)
+        $days = max(1, min(365, $days));
+        
+        // Generate a cache key based on the request
+        $cacheKey = "coin_history_{$id}_{$days}";
+        $cacheDuration = now()->addMinutes(15); // Cache for 15 minutes
+        
+        // Try to get from cache first
+        if (cache()->has($cacheKey)) {
+            $cachedData = cache()->get($cacheKey);
+            Log::info('Serving price history from cache', [
+                'id' => $id,
                 'days' => $days,
-                'interval' => 'daily',
-                'precision' => 'full'
-            ];
-            
-            Log::debug('CoinGecko API Request:', [
-                'url' => $url,
-                'params' => $params,
-                'id' => $id
+                'cache_key' => $cacheKey
             ]);
+            return $cachedData;
+        }
+        
+        while ($attempt < $maxRetries) {
+            $attempt++;
             
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            ])->timeout(15)->get($url, $params);
-            
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                if (empty($data) || !isset($data['prices']) || !is_array($data['prices'])) {
-                    Log::error('Invalid response format from CoinGecko API', [
-                        'status' => $response->status(),
-                        'response' => $data,
-                        'id' => $id
-                    ]);
-                    return null;
+            try {
+                // Add delay between retries (increasing with each attempt)
+                if ($attempt > 1) {
+                    $delay = min(pow(2, $attempt), 10); // Exponential backoff, max 10 seconds
+                    Log::warning("Retry attempt {$attempt} for {$id} after {$delay} seconds");
+                    sleep($delay);
                 }
                 
-                // Ensure we have valid data points
-                if (empty($data['prices'])) {
-                    Log::warning('Empty price data from CoinGecko API', [
+                $this->rateLimit();
+                
+                $url = self::API_URL . "/coins/" . urlencode($id) . "/market_chart";
+                $params = [
+                    'vs_currency' => 'usd',
+                    'days' => $days,
+                    'interval' => 'daily',
+                    'precision' => 'full'
+                ];
+                
+                Log::info('CoinGecko API Request:', [
+                    'attempt' => $attempt,
+                    'id' => $id,
+                    'days' => $days,
+                    'url' => $url,
+                    'params' => $params
+                ]);
+                
+                $response = Http::withHeaders([
+                    'Accept' => 'application/json',
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                ])->timeout(15)->get($url, $params);
+                
+                $status = $response->status();
+                $responseData = $response->json();
+                
+                Log::debug('CoinGecko API Response:', [
+                    'attempt' => $attempt,
+                    'status' => $status,
+                    'id' => $id,
+                    'has_prices' => !empty($responseData['prices']),
+                    'prices_count' => is_array($responseData['prices'] ?? null) ? count($responseData['prices']) : 0
+                ]);
+                
+                if ($status === 200 && !empty($responseData['prices'])) {
+                    // Validate the price data format
+                    $prices = $responseData['prices'];
+                    $validPrices = array_filter($prices, function($point) {
+                        return is_array($point) && count($point) >= 2 && is_numeric($point[0]) && is_numeric($point[1]);
+                    });
+                    
+                    if (empty($validPrices)) {
+                        throw new \Exception('No valid price points found in response');
+                    }
+                    
+                    // Sort by timestamp and ensure unique timestamps
+                    usort($validPrices, function($a, $b) {
+                        return $a[0] <=> $b[0];
+                    });
+                    
+                    // Remove duplicate timestamps (keep the last occurrence)
+                    $uniquePrices = [];
+                    $seenTimestamps = [];
+                    foreach (array_reverse($validPrices) as $point) {
+                        $timestamp = $point[0];
+                        if (!isset($seenTimestamps[$timestamp])) {
+                            $seenTimestamps[$timestamp] = true;
+                            $uniquePrices[] = $point;
+                        }
+                    }
+                    $uniquePrices = array_reverse($uniquePrices);
+                    
+                    $responseData['prices'] = $uniquePrices;
+                    
+                    Log::info('Successfully fetched price history', [
                         'id' => $id,
+                        'days' => $days,
+                        'data_points' => count($uniquePrices),
+                        'first_point' => $uniquePrices[0] ?? null,
+                        'last_point' => end($uniquePrices) ?: null
+                    ]);
+                    
+                    // Cache the successful response
+                    cache()->put($cacheKey, $responseData, $cacheDuration);
+                    
+                    return $responseData;
+                }
+                
+                // Handle rate limiting (429) or server errors (5xx)
+                if (in_array($status, [429, 500, 502, 503, 504])) {
+                    $retryAfter = $response->header('Retry-After') ?? 5;
+                    Log::warning("Rate limited or server error. Retrying after {$retryAfter} seconds", [
+                        'status' => $status,
+                        'retry_after' => $retryAfter,
+                        'attempt' => $attempt
+                    ]);
+                    sleep($retryAfter);
+                    continue;
+                }
+                
+                // For other client errors, log and return null
+                if ($status >= 400 && $status < 500) {
+                    $lastError = [
+                        'error' => 'Client error',
+                        'status' => $status,
+                        'response' => $responseData,
+                        'attempt' => $attempt
+                    ];
+                    Log::error('CoinGecko API client error', $lastError);
+                    break;
+                }
+                
+            } catch (\Exception $e) {
+                $lastError = [
+                    'error' => $e->getMessage(),
+                    'attempt' => $attempt,
+                    'trace' => $e->getTraceAsString()
+                ];
+                Log::error("Attempt {$attempt} failed for {$id}", $lastError);
+                
+                // If we've reached max retries, log the final error
+                if ($attempt >= $maxRetries) {
+                    Log::error("Max retries reached for {$id}", [
+                        'error' => $e->getMessage(),
+                        'attempts' => $attempt,
                         'days' => $days
                     ]);
+                    break;
                 }
                 
-                return $data;
+                // Continue to next retry attempt
+                continue;
             }
-            
-            Log::error('CoinGecko API error', [
-                'status' => $response->status(),
-                'response' => $response->body(),
-                'id' => $id,
-                'url' => $url
-            ]);
-            
-            return null;
-            
-        } catch (\Exception $e) {
-            Log::error("Failed to fetch price history for {$id}", [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'id' => $id,
-                'days' => $days
-            ]);
-            return null;
         }
+        
+        // If we get here, all attempts failed
+        Log::error('Failed to fetch price history after all retries', [
+            'id' => $id,
+            'days' => $days,
+            'attempts' => $attempt,
+            'last_error' => $lastError
+        ]);
+        
+        return null;
     }
 
 

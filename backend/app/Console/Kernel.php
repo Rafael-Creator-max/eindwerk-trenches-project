@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\SyncCryptocurrencies::class,
+        Commands\UpdateCryptocurrencyData::class,
     ];
 
     /**
@@ -21,6 +22,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Update cryptocurrency data every 5 minutes
+        $schedule->command('cryptocurrencies:update')
+                 ->everyFiveMinutes()
+                 ->withoutOverlapping()
+                 ->onOneServer()
+                 ->appendOutputTo(storage_path('logs/crypto-update.log'));
+                 
         // Sync cryptocurrency data every 15 minutes
         $schedule->command('crypto:sync')
                  ->everyFifteenMinutes()
