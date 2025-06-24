@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
@@ -11,6 +11,7 @@ interface Cryptocurrency {
   name: string;
   symbol: string;
   slug: string;
+  external_id?: string;
   current_price: number | string;
   price_change_24h: number | string;
   market_cap: number | string;
@@ -22,7 +23,34 @@ export default function CryptocurrenciesPage() {
   const [cryptos, setCryptos] = useState<Cryptocurrency[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Cryptocurrency | null; direction: 'asc' | 'desc' }>({ 
+    key: 'market_cap', 
+    direction: 'desc' 
+  });
+  const [priceChanges, setPriceChanges] = useState<Record<number, number>>({});
   const router = useRouter();
+
+  const fetchPriceHistory = async (cryptoId: number, externalId: string) => {
+    try {
+      const response = await api.get(`/api/cryptocurrencies/${externalId}/price-history`, {
+        params: { days: 1, _t: new Date().getTime() } // Fetch 1 day of price history
+      });
+      
+      if (response.data?.data?.prices?.length >= 2) {
+        const prices = response.data.data.prices;
+        const firstPrice = prices[0][1];
+        const lastPrice = prices[prices.length - 1][1];
+        const priceChange = ((lastPrice - firstPrice) / firstPrice) * 100;
+        
+        setPriceChanges(prev => ({
+          ...prev,
+          [cryptoId]: priceChange
+        }));
+      }
+    } catch (err) {
+      console.error(`Error fetching price history for crypto ${cryptoId}:`, err);
+    }
+  };
 
   useEffect(() => {
     const fetchCryptos = async () => {
@@ -31,7 +59,24 @@ export default function CryptocurrenciesPage() {
         const response = await api.get('/api/cryptocurrencies', {
           params: { _t: new Date().getTime() } // Prevent caching
         });
-        setCryptos(response.data);
+        
+        // Update cryptos with the new data
+        const updatedCryptos = response.data;
+        setCryptos(updatedCryptos);
+        
+        // Fetch price history for each crypto to calculate accurate 24h change
+        updatedCryptos.forEach((crypto: any) => {
+          if (crypto.external_id) {
+            fetchPriceHistory(crypto.id, crypto.external_id);
+          } else {
+            // Fallback to using the provided price_change_24h if external_id is not available
+            setPriceChanges(prev => ({
+              ...prev,
+              [crypto.id]: Number(crypto.price_change_24h) || 0
+            }));
+          }
+        });
+        
         const now = new Date();
         setLastUpdated(now.toLocaleTimeString('en-US', {
           hour: '2-digit',
@@ -84,7 +129,7 @@ export default function CryptocurrenciesPage() {
     const ArrowIcon = isPositive ? FiArrowUp : FiArrowDown;
     return (
       <span className={`${colorClass} flex items-center justify-end gap-1`}>
-        <ArrowIcon className="inline" /> {Math.abs(numValue).toFixed(2)}%
+        {numValue !== 0 && <ArrowIcon className="inline" />} {Math.abs(numValue).toFixed(2)}%
       </span>
     );
   };
@@ -159,10 +204,59 @@ export default function CryptocurrenciesPage() {
     await refreshData();
   }, [lastUpdated]); // Only recreate when lastUpdated changes
 
-  const filteredCryptos = cryptos.filter(crypto => 
+  const sortedCryptos = useMemo(() => {
+    let sortableItems = [...cryptos];
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        // Handle numeric values
+        if (['current_price', 'price_change_24h', 'market_cap', 'volume_24h'].includes(sortConfig.key as string)) {
+          const aValue = Number(a[sortConfig.key as keyof Cryptocurrency]) || 0;
+          const bValue = Number(b[sortConfig.key as keyof Cryptocurrency]) || 0;
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+        
+        // Handle string values
+        const aValue = String(a[sortConfig.key as keyof Cryptocurrency] || '').toLowerCase();
+        const bValue = String(b[sortConfig.key as keyof Cryptocurrency] || '').toLowerCase();
+        
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [cryptos, sortConfig]);
+
+  // Enhance cryptos with accurate price changes
+  const enhancedCryptos = useMemo(() => {
+    return sortedCryptos.map(crypto => ({
+      ...crypto,
+      // Use the calculated price change if available, otherwise fall back to the API value
+      price_change_24h: priceChanges[crypto.id] !== undefined 
+        ? priceChanges[crypto.id] 
+        : Number(crypto.price_change_24h) || 0
+    }));
+  }, [sortedCryptos, priceChanges]);
+
+  const filteredCryptos = enhancedCryptos.filter((crypto: Cryptocurrency) =>
     crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const requestSort = (key: keyof Cryptocurrency) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: keyof Cryptocurrency) => {
+    if (sortConfig.key !== key) return <FiArrowUp className="ml-1 inline-block opacity-30" size={14} />;
+    return sortConfig.direction === 'asc' 
+      ? <FiArrowUp className="ml-1 inline-block" size={14} /> 
+      : <FiArrowDown className="ml-1 inline-block" size={14} />;
+  };
 
   if (loading && cryptos.length === 0) {
     return (
@@ -272,14 +366,50 @@ export default function CryptocurrenciesPage() {
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">#</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Coin</th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Price</th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">24h %</th>
-                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Market Cap</th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                      onClick={() => requestSort('name')}
+                    >
+                      <div className="flex items-center">
+                        Coin
+                        {getSortIcon('name')}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                      onClick={() => requestSort('current_price')}
+                    >
+                      <div className="flex items-center justify-end">
+                        Price
+                        {getSortIcon('current_price')}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                      onClick={() => requestSort('price_change_24h')}
+                    >
+                      <div className="flex items-center justify-end">
+                        24h %
+                        {getSortIcon('price_change_24h')}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                      onClick={() => requestSort('market_cap')}
+                    >
+                      <div className="flex items-center justify-end">
+                        Market Cap
+                        {getSortIcon('market_cap')}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredCryptos.map((crypto, index) => (
+                  {filteredCryptos.map((crypto: Cryptocurrency, index: number) => (
                     <tr 
                       key={crypto.id} 
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"

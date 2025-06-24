@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import FollowedCryptos from '@/components/FollowedCryptos';
 import CryptocurrencyTable from '@/components/CryptocurrencyTable';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type TabType = 'market' | 'watchlist';
 
@@ -18,8 +20,19 @@ export default function DashboardPage() {
     if (!authLoading && !isAuthenticated) {
       console.log('Dashboard: Not authenticated, redirecting to login');
       router.replace(`/login?from=${encodeURIComponent('/dashboard')}`);
+    } else if (isAuthenticated && user?.name) {
+      // Show welcome toast when user is authenticated
+      toast.success(`Welcome back, ${user.name}!`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, router, user]);
 
   // Show loading state while checking auth
   if (authLoading || !isAuthenticated) {
@@ -32,6 +45,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <ToastContainer />
       <nav className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -95,7 +109,7 @@ export default function DashboardPage() {
       </nav>
 
       <header className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             {activeTab === 'market' ? 'Cryptocurrency Market' : 'My Watchlist'}
           </h1>
@@ -104,7 +118,7 @@ export default function DashboardPage() {
               ? 'Browse and track the latest cryptocurrency prices and market data.'
               : 'Your personalized list of followed cryptocurrencies.'}
           </p>
-        </div>
+        </div> */}
       </header>
 
       <main className="py-6">
@@ -112,11 +126,13 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back, {user?.name}!</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {activeTab === 'market' ? 'Cryptocurrency Market' : 'My Watchlist'}
+                </h2>
                 <p className="text-gray-600 dark:text-gray-300">
                   {activeTab === 'market' 
-                    ? 'Explore the latest cryptocurrency market data.'
-                    : 'Manage your cryptocurrency watchlist.'}
+                    ? 'Take a fast glance at the latest crypto prices and market data.'
+                    : 'Your personalized list of followed cryptocurrencies.'}
                 </p>
               </div>
               <div className="mt-4 md:mt-0 flex space-x-2">
@@ -147,19 +163,19 @@ export default function DashboardPage() {
               {activeTab === 'market' ? (
                 <>
                   <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Cryptocurrency Market</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Market list</h2>
                     <p className="text-gray-600 dark:text-gray-300">Browse and add cryptocurrencies to your watchlist.</p>
                   </div>
                   <CryptocurrencyTable />
                 </>
               ) : (
                 <>
-                  <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Your Watchlist</h2>
+                  {/* <div className="mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">My Watchlist</h2>
                     <p className="text-gray-600 dark:text-gray-300">
                       {activeTab === 'watchlist' && 'Cryptocurrencies you\'re currently following.'}
                     </p>
-                  </div>
+                  </div> */}
                   <FollowedCryptos />
                 </>
               )}
