@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import api from '@/lib/api';
+import api, { createApiWithTimeout } from '@/lib/api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '@/components/Navbar';
 import { FiArrowUp, FiArrowDown, FiArrowLeft, FiLink, FiTwitter, FiGlobe, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -66,52 +68,145 @@ export default function CryptocurrencyDetailPage() {
   };
 
   const fetchPriceHistory = async (days: string) => {
+    if (!slug) return;
+    
     try {
       setLoadingChart(true);
-      console.log('Fetching price history for days:', days);
-      
-      const response = await api.get(`/api/cryptocurrencies/${slug}/chart?days=${days}`);
-      console.log('Price history response:', response.data);
-      
-      // Check if we have valid data in the response
-      if (response.data && response.data.data) {
-        const prices = response.data.data.prices || [];
-        console.log('Raw prices data:', prices);
-        
-        // Create formatted data if we have prices
-        const formattedData = prices.length > 0 
-          ? prices.map((priceItem: any) => {
-              // Handle both array [timestamp, price] and object {date, price} formats
-              const timestamp = Array.isArray(priceItem) ? priceItem[0] : priceItem.date;
-              const price = Array.isArray(priceItem) ? priceItem[1] : priceItem.price;
-              
-              return {
-                date: new Date(timestamp).toLocaleDateString(),
-                price: Number(price)
-              };
-            })
-          : [];
-        
-        console.log('Formatted price data:', formattedData);
-        setPriceData(formattedData);
-        
-        // Log a warning if no price data is available
-        if (prices.length === 0) {
-          console.warn('No price data available for the selected period', {
-            cryptoId: response.data.crypto_id,
-            symbol: response.data.symbol,
-            message: response.data.message,
-            responseData: response.data
+      const fetchPriceHistory = async (days = 7) => {
+        try {
+          console.log(`[${new Date().toISOString()}] Fetching price history for ${slug} (${days} days)`);
+          setLoading(true);
+          
+          // Use a dedicated API client with a longer timeout for price history
+          const priceHistoryApi = createApiWithTimeout(30000); // 30 second timeout for price history
+          
+          const response = await priceHistoryApi.get(`/api/cryptocurrencies/${slug}/chart`, {
+            params: { 
+              days,
+              _t: Date.now() // Cache buster
+            }
           });
+          
+          if (response.data?.data?.prices) {
+            const prices = response.data.data.prices;
+            const marketCaps = response.data.data.market_caps || [];
+            const volumes = response.data.data.total_volumes || [];
+            
+            console.log(`[${new Date().toISOString()}] Received ${prices.length} price points for ${slug}`);
+            
+            // Process and validate price data
+            const validPrices = prices
+              .filter((item: any) => Array.isArray(item) && item.length >= 2 && !isNaN(item[0]) && !isNaN(item[1]))
+              .map((item: [number, number]) => ({
+                timestamp: item[0],
+                price: Number(item[1])
+              }));
+            
+            // Sort by timestamp just in case
+            validPrices.sort((a: any, b: any) => a.timestamp - b.timestamp);
+            
+            // Format data for the chart
+            const formattedData = validPrices.map(item => ({
+              date: new Date(item.timestamp).toLocaleDateString(),
+              price: item.price,
+              timestamp: item.timestamp
+            }));
+            
+            console.log(`[${new Date().toISOString()}] Processed ${formattedData.length} valid price points for ${slug}`);
+            
+            // Update state with the new data
+            setPriceData(formattedData);
+            
+            // Calculate 24h price change if we have at least 2 data points
+            if (validPrices.length >= 2) {
+              const firstPrice = validPrices[0].price;
+              const lastPrice = validPrices[validPrices.length - 1].price;
+              const priceChange = ((lastPrice - firstPrice) / firstPrice) * 100;
+              setPriceChange24h(priceChange);
+              
+              // Also update the crypto object if it exists
+              if (crypto) {
+                setCrypto({
+                  ...crypto,
+                  price_change_24h: priceChange.toString()
+                });
+              }
+            }
+            
+            // Log if we got an empty but valid response
+            if (validPrices.length === 0) {
+              console.warn(`[${new Date().toISOString()}] No valid price data points for ${slug}`, {
+                cryptoId: response.data.crypto_id,
+                symbol: response.data.symbol,
+                originalCount: prices.length,
+                validCount: validPrices.length,
+                message: response.data.message
+              });
+            }
+          } else {
+            // No valid price data in response
+            console.warn(`[${new Date().toISOString()}] No valid price data in response for ${slug}`, {
+              status: response.status,
+              hasData: !!response.data,
+              hasPrices: Array.isArray(response.data?.data?.prices),
+              priceCount: Array.isArray(response.data?.data?.prices) ? response.data.data.prices.length : 0,
+              message: response.data?.message
+            });
+            
+            setPriceData([]);
+          }
+        } catch (err: any) {
+          console.error(`[${new Date().toISOString()}] Error fetching price history for ${slug}:`, {
+            error: err.message,
+            status: err.response?.status,
+            code: err.code,
+            config: err.config
+          });
+          
+          // Set empty data on error
+          setPriceData([]);
+          setPriceChange24h(0);
+          
+          // Show appropriate error message
+          let errorMessage = 'Failed to load price history. ';
+          
+          if (err.code === 'ECONNABORTED') {
+            errorMessage = 'Request timed out. The server is taking too long to respond.';
+          } else if (err.response?.status === 429) {
+            errorMessage = 'Too many requests. Please wait before trying again.';
+          } else if (err.response?.data?.message) {
+            errorMessage += err.response.data.message;
+          } else if (err.message) {
+            errorMessage += err.message;
+          } else {
+            errorMessage += 'Please try again later.';
+          }
+          
+          // Show error toast
+          toast.error(errorMessage);
+          
+          // If we have cached data, we might want to show it here
+          // or implement a retry mechanism
+        } finally {
+          setLoading(false);
         }
-      }
+      };
+      await fetchPriceHistory(Number(days));
     } catch (err: any) {
-      console.error('Error fetching price history:', {
-        error: err,
-        message: err.response?.data?.message || err.message,
-        status: err.response?.status
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch price history';
+      
+      console.error(`[${new Date().toISOString()}] Error fetching price history for ${slug}:`, {
+        error: errorMessage,
+        status: err.response?.status,
+        code: err.code,
+        config: {
+          url: err.config?.url,
+          method: err.config?.method,
+          params: err.config?.params
+        }
       });
-      // Reset to empty array on error
+      
+      setError(errorMessage);
       setPriceData([]);
     } finally {
       setLoadingChart(false);
@@ -126,7 +221,12 @@ export default function CryptocurrencyDetailPage() {
 
   useEffect(() => {
     if (slug) {
-      fetchPriceHistory(timeRange);
+      // Refresh both the price history and the main data when time range changes
+      const refreshData = async () => {
+        await fetchData();
+        await fetchPriceHistory(timeRange);
+      };
+      refreshData();
     }
   }, [timeRange]);
 
@@ -227,6 +327,7 @@ export default function CryptocurrencyDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
+      <ToastContainer position="bottom-right" autoClose={5000} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button
           onClick={() => router.back()}
@@ -462,4 +563,4 @@ export default function CryptocurrencyDetailPage() {
       </div>
     </div>
   );
-}
+};

@@ -22,15 +22,77 @@ const getBaseUrl = () => {
 const baseURL = getBaseUrl();
 console.log('Using API baseURL:', baseURL);
 
+// Default timeout in milliseconds
+const DEFAULT_TIMEOUT = 15000; // 15 seconds
+const LONG_RUNNING_TIMEOUT = 30000; // 30 seconds for long-running requests
+
 const api = axios.create({
   baseURL,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
   withCredentials: true,
-  timeout: 10000, // 10 seconds timeout
+  timeout: DEFAULT_TIMEOUT,
 });
+
+// Helper function to create a new instance with a custom timeout
+function createApiWithTimeout(timeout: number) {
+  return axios.create({
+    baseURL,
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    withCredentials: true,
+    timeout,
+  });
+}
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => {
+    // You can add response transformation here if needed
+    return response;
+  },
+  (error) => {
+    const url = error.config?.url || 'unknown';
+    const method = error.config?.method?.toUpperCase() || 'GET';
+    
+    if (error.code === 'ECONNABORTED') {
+      const timeout = error.config?.timeout || 'unknown';
+      console.error(`Request timeout (${timeout}ms) - ${method} ${url}`);
+      error.message = `The request timed out after ${timeout}ms. Please try again.`;
+    } else if (!error.response) {
+      // Network error (server not reachable, CORS, etc.)
+      console.error(`Network Error - Could not connect to ${method} ${url}`);
+      error.message = 'Unable to connect to the server. Please check your internet connection.';
+    } else {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      const status = error.response.status;
+      const message = error.response.data?.message || 'An error occurred';
+      
+      console.error(`API Error: ${status} - ${method} ${url}`, {
+        status,
+        message,
+        error: error.response.data
+      });
+      
+      if (status === 429) {
+        error.message = 'Too many requests. Please wait before trying again.';
+      } else if (status >= 500) {
+        error.message = 'Server error. Please try again later.';
+      } else {
+        error.message = message;
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 // Add token to requests if it exists
 api.interceptors.request.use(
@@ -125,4 +187,6 @@ export const getCSRFToken = async (): Promise<null> => {
   return null;
 };
 
+// Export the default API instance and the create function
+export { createApiWithTimeout };
 export default api;

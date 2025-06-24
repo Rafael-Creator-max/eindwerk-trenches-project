@@ -28,11 +28,14 @@ export default function CryptocurrencyTable() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
-  const fetchCryptos = useCallback(async () => {
+  const fetchCryptos = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
       const response = await api.get('/cryptocurrencies', {
-        params: { _t: new Date().getTime() } // Prevent caching
+        params: { 
+          _t: new Date().getTime(), // Prevent caching
+          force_refresh: forceRefresh // Force refresh from the server
+        }
       });
       
       // Check if user is authenticated and fetch watchlist
@@ -194,7 +197,7 @@ export default function CryptocurrencyTable() {
             <span className="mr-3">Last updated: {lastUpdated}</span>
           )}
           <button
-            onClick={fetchCryptos}
+            onClick={() => fetchCryptos(true)}
             disabled={loading}
             className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
