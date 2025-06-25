@@ -6,7 +6,7 @@ endpoints:
   -
     httpMethods:
       - POST
-    uri: 'api/cryptocurrencies/{cryptocurrency}/follow'
+    uri: 'api/cryptocurrencies/{id}/follow'
     metadata:
       groupName: 'User Actions'
       groupDescription: ''
@@ -23,6 +23,16 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
+      id:
+        name: id
+        description: 'The ID of the cryptocurrency.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        custom: []
       cryptocurrency:
         name: cryptocurrency
         description: 'The slug of the cryptocurrency to follow.'
@@ -34,6 +44,7 @@ endpoints:
         nullable: false
         custom: []
     cleanUrlParameters:
+      id: architecto
       cryptocurrency: bitcoin
     queryParameters: []
     cleanQueryParameters: []
@@ -80,7 +91,7 @@ endpoints:
   -
     httpMethods:
       - DELETE
-    uri: 'api/cryptocurrencies/{cryptocurrency}/follow'
+    uri: 'api/cryptocurrencies/{id}/follow'
     metadata:
       groupName: 'User Actions'
       groupDescription: ''
@@ -97,9 +108,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      cryptocurrency:
-        name: cryptocurrency
-        description: 'The slug of the cryptocurrency to unfollow.'
+      id:
+        name: id
+        description: 'The slug or id of the cryptocurrency to unfollow.'
         required: true
         example: bitcoin
         type: string
@@ -108,7 +119,7 @@ endpoints:
         nullable: false
         custom: []
     cleanUrlParameters:
-      cryptocurrency: bitcoin
+      id: bitcoin
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []

@@ -25,6 +25,12 @@ class CryptocurrencyController extends Controller
     // Cache duration in minutes
     protected $cacheDuration = 5;
 
+    /**
+     * Create a new controller instance.
+     *
+     * @param  \App\Services\CoinGeckoService  $coinGeckoService
+     * @return void
+     */
     public function __construct(CoinGeckoService $coinGeckoService)
     {
         $this->coinGeckoService = $coinGeckoService;
@@ -33,8 +39,15 @@ class CryptocurrencyController extends Controller
     /**
      * Get List of All Cryptocurrencies
      *
-     * Returns a paginated list of all cryptocurrencies ordered by market cap (descending).
-     * Data is cached for 5 minutes to improve performance.
+     * Returns a paginated list of all cryptocurrencies with their current market data.
+     * Results are ordered by market cap (descending) and cached for 5 minutes to improve performance.
+     *
+     * @queryParam page integer The page number to return. Example: 1
+     * @queryParam per_page integer Number of items per page. Default: 15. Example: 20
+     * @queryParam vs_currency string The target currency of market data. Default: usd. Example: eur
+     * @queryParam order string The field to order by. Default: market_cap_desc. Example: volume_desc
+     * @queryParam sparkline boolean Include sparkline 7d data. Default: false. Example: true
+     * @queryParam price_change_percentage string Include price change percentage. Comma-separated values. Example: 1h,24h,7d
      *
      * @response 200 {
      *   "data": [
@@ -45,9 +58,36 @@ class CryptocurrencyController extends Controller
      *       "name": "Bitcoin",
      *       "slug": "bitcoin",
      *       "external_id": "bitcoin",
-     *       "current_price": "50000.00000000",
-     *       "market_cap": "1000000000000.00",
-     *       "volume_24h": "50000000000.00",
+     *       "current_price": 50000.00,
+     *       "market_cap": 1000000000000.00,
+     *       "market_cap_rank": 1,
+     *       "total_volume": 50000000000.00,
+     *       "high_24h": 51000.00,
+     *       "low_24h": 49000.00,
+     *       "price_change_24h": 1000.00,
+     *       "price_change_percentage_24h": 2.04,
+     *       "market_cap_change_24h": 20000000000.00,
+     *       "market_cap_change_percentage_24h": 2.04,
+     *       "circulating_supply": 18796831.0,
+     *       "total_supply": 21000000.0,
+     *       "max_supply": 21000000.0,
+     *       "ath": 69045.00,
+     *       "ath_change_percentage": -27.59,
+     *       "ath_date": "2021-11-10T14:24:11.849Z",
+     *       "atl": 67.81,
+     *       "atl_change_percentage": 73630.19,
+     *       "atl_date": "2013-07-06T00:00:00.000Z",
+     *       "last_updated": "2023-01-01T12:00:00.000Z",
+     *       "price_change_percentage_1h_in_currency": 0.1,
+     *       "price_change_percentage_24h_in_currency": 2.04,
+     *       "price_change_percentage_7d_in_currency": -5.24,
+     *       "image": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
+     *       "roi": null,
+     *       "sparkline_in_7d": {
+     *         "price": [
+     *           50000.00, 50200.00, 50100.00, 50300.00, 50400.00
+     *         ]
+     *       }
      *       "price_change_24h": "2.50000000",
      *       "created_at": "2023-01-01T00:00:00.000000Z",
      *       "updated_at": "2023-01-01T00:00:00.000000Z"
@@ -216,114 +256,6 @@ class CryptocurrencyController extends Controller
      * }
      *
      * @response 404 {
-     *   "message": "No query results for model [App\\Models\\Cryptocurrency]"
-     * }
-     *
-     * @group User Actions
-     */
-    public function unfollow($id)
-    {
-        $user = Auth::user();
-        $crypto = Cryptocurrency::where('slug', $id)
-            ->orWhere('id', $id)
-            ->firstOrFail();
-        
-        $user->cryptocurrencies()->detach($crypto->id);
-        
-        return response()->json(['message' => 'Successfully unfollowed cryptocurrency']);
-    }
-
-    /**
-     * Get Trending Cryptocurrencies
-     *
-     * Returns a list of currently trending cryptocurrencies based on CoinGecko's trending data.
-     *
-     * @response 200 {
-     *   "coins": [
-     *     {
-     *       "item": {
-     *         "id": "bitcoin",
-     *         "coin_id": 1,
-     *         "name": "Bitcoin",
-     *         "symbol": "btc",
-     *         "market_cap_rank": 1,
-     *         "thumb": "https://assets.coingecko.com/coins/images/1/thumb/bitcoin.png",
-     *         "small": "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
-     *         "large": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-     *         "slug": "bitcoin",
-     *         "price_btc": 1,
-     *         "score": 0
-     *       }
-     *     },
-     *     ...
-     *   ]
-     * }
-     *
-     * @group Cryptocurrency Management
-     */
-    public function trending()
-    {
-        $trending = $this->coinGeckoService->getTrendingCoins();
-        return response()->json($trending);
-    }
-    
-    /**
-     * Get User's Followed Cryptocurrencies
-     *
-     * Returns a list of all cryptocurrencies that the authenticated user is following.
-     * Requires authentication via Bearer token.
-     *
-     * @authenticated
-     *
-     * @response 200 [
-     *   {
-     *     "id": 1,
-     *     "asset_type_id": 1,
-     *     "symbol": "BTC",
-     *     "name": "Bitcoin",
-     *     "slug": "bitcoin",
-     *     "external_id": "bitcoin",
-     *     "current_price": "50000.00000000",
-     *     "market_cap": "1000000000000.00",
-     *     "volume_24h": "50000000000.00",
-     *     "price_change_24h": "2.50000000",
-     *     "created_at": "2023-01-01T00:00:00.000000Z",
-     *     "updated_at": "2023-01-01T00:00:00.000000Z",
-     *     "pivot": {
-     *       "user_id": 1,
-     *       "cryptocurrency_id": 1
-     *     },
-     *     "asset_type": {
-     *       "id": 1,
-     *       "name": "Cryptocurrency",
-     *       "description": "Digital or virtual currency that uses cryptography for security",
-     *       "created_at": "2023-01-01T00:00:00.000000Z",
-     *       "updated_at": "2023-01-01T00:00:00.000000Z"
-     *     }
-     *   }
-     * ]
-     *
-     * @response 401 {
-     *   "message": "Unauthenticated."
-     * }
-     *
-     * @group User Actions
-     */
-    public function followed()
-    {
-        $cryptos = Auth::user()->cryptocurrencies()
-            ->with('assetType')
-            ->get();
-            
-        return response()->json($cryptos);
-    }
-
-    /**
-     * Get Cryptocurrency Details
-     *
-     * Returns detailed information about a specific cryptocurrency by its slug or id.
-     * Data is cached for 5 minutes to improve performance.
-     *
      * @urlParam id string required The slug or id of the cryptocurrency. Example: bitcoin
      *
      * @response 200 {
@@ -518,6 +450,141 @@ class CryptocurrencyController extends Controller
                     'message' => $e->getMessage(),
                     'type' => get_class($e)
                 ] : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Get User's Followed Cryptocurrencies
+     *
+     * Returns a list of all cryptocurrencies that the authenticated user is following.
+     * Requires authentication via Bearer token.
+     *
+     * @authenticated
+     *
+     * @response 200 [
+     *   {
+     *     "id": 1,
+     *     "asset_type_id": 1,
+     *     "symbol": "BTC",
+     *     "name": "Bitcoin",
+     *     "slug": "bitcoin",
+     *     "external_id": "bitcoin",
+     *     "current_price": "50000.00000000",
+     *     "market_cap": "1000000000000.00",
+     *     "volume_24h": "50000000000.00",
+     *     "price_change_24h": "2.50000000",
+     *     "created_at": "2023-01-01T00:00:00.000000Z",
+     *     "updated_at": "2023-01-01T00:00:00.000000Z",
+     *     "pivot": {
+     *       "user_id": 1,
+     *       "cryptocurrency_id": 1
+     *     },
+     *     "asset_type": {
+     *       "id": 1,
+     *       "name": "Cryptocurrency",
+     *       "description": "Digital or virtual currency that uses cryptography for security",
+     *       "created_at": "2023-01-01T00:00:00.000000Z",
+     *       "updated_at": "2023-01-01T00:00:00.000000Z"
+     *     }
+     *   }
+     * ]
+     *
+     * @response 401 {
+     *   "message": "Unauthenticated."
+     * }
+     *
+     * @group User Actions
+     */
+    public function followed()
+    {
+        try {
+            $user = Auth::user();
+            
+            $cryptos = $user->cryptocurrencies()
+                ->with('assetType')
+                ->orderBy('market_cap', 'desc')
+                ->get();
+                
+            return response()->json($cryptos);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching followed cryptocurrencies: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'exception' => get_class($e),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ]);
+            
+            return response()->json([
+                'message' => 'Unable to fetch followed cryptocurrencies',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+    
+    /**
+     * Unfollow a Cryptocurrency
+     *
+     * Allows the authenticated user to unfollow a specific cryptocurrency.
+     * Requires authentication via Bearer token.
+     *
+     * @authenticated
+     * @urlParam id string required The slug or id of the cryptocurrency to unfollow. Example: bitcoin
+     *
+     * @response 200 {
+     *   "message": "Successfully unfollowed cryptocurrency"
+     * }
+     *
+     * @response 401 {
+     *   "message": "Unauthenticated."
+     * }
+     *
+     * @response 404 {
+     *   "message": "No query results for model [App\\Models\\Cryptocurrency]"
+     * }
+     *
+     * @group User Actions
+     */
+    public function unfollow($id)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Find the cryptocurrency by ID or slug
+            $crypto = Cryptocurrency::where('slug', $id)
+                ->orWhere('id', $id)
+                ->firstOrFail();
+            
+            // Detach the cryptocurrency from the user
+            $user->cryptocurrencies()->detach($crypto->id);
+            
+            return response()->json([
+                'message' => 'Successfully unfollowed cryptocurrency',
+                'cryptocurrency_id' => $crypto->id
+            ]);
+            
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Cryptocurrency not found: ' . $id, [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'message' => 'Cryptocurrency not found',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 404);
+            
+        } catch (\Exception $e) {
+            Log::error('Error unfollowing cryptocurrency: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'cryptocurrency_id' => $id,
+                'exception' => get_class($e),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ]);
+            
+            return response()->json([
+                'message' => 'Unable to unfollow cryptocurrency',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }

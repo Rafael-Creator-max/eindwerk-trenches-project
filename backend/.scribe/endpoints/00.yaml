@@ -1,20 +1,228 @@
-name: Endpoints
-description: ''
+name: Authentication
+description: |-
+
+  APIs for user authentication and management
 endpoints:
   -
     httpMethods:
-      - GET
-    uri: api/user
+      - POST
+    uri: api/register
     metadata:
-      groupName: Endpoints
-      groupDescription: ''
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for user authentication and management
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
+      title: 'Register a new user'
+      description: 'Create a new user account with the provided information.'
       authenticated: false
       custom: []
     headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        name: name
+        description: 'The name of the user.'
+        required: true
+        example: 'John Doe'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      email:
+        name: email
+        description: 'The email address of the user. Must be unique.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password:
+        name: password
+        description: 'The desired password. Minimum 8 characters.'
+        required: true
+        example: your-secure-password
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password_confirmation:
+        name: password_confirmation
+        description: 'Confirm the password. Must match password.'
+        required: true
+        example: your-secure-password
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      name: 'John Doe'
+      email: user@example.com
+      password: your-secure-password
+      password_confirmation: your-secure-password
+    fileParameters: []
+    responses:
+      -
+        status: 201
+        content: |-
+          {
+              "message": "User registered successfully",
+              "user": {
+                  "name": "John Doe",
+                  "email": "user@example.com",
+                  "updated_at": "2023-01-01T12:00:00.000000Z",
+                  "created_at": "2023-01-01T12:00:00.000000Z",
+                  "id": 1
+              },
+              "token": "1|a1b2c3d4..."
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 422
+        content: |-
+          {
+              "message": "The given data was invalid.",
+              "errors": {
+                  "email": ["The email has already been taken."],
+                  "password": ["The password confirmation does not match."]
+              }
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - POST
+    uri: api/login
+    metadata:
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for user authentication and management
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Authenticate user and create token'
+      description: 'Authenticate a user with email and password to receive an access token.'
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        name: email
+        description: 'The email address of the user.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password:
+        name: password
+        description: "The user's password."
+        required: true
+        example: your-secure-password
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      email: user@example.com
+      password: your-secure-password
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+              "access_token": "1|a1b2c3d4...",
+              "token_type": "Bearer",
+              "user": {
+                  "id": 1,
+                  "name": "John Doe",
+                  "email": "user@example.com",
+                  "email_verified_at": "2023-01-01T12:00:00.000000Z",
+                  "created_at": "2023-01-01T12:00:00.000000Z",
+                  "updated_at": "2023-01-01T12:00:00.000000Z"
+              }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 401
+        content: |-
+          {
+              "message": "The provided credentials are incorrect.",
+              "errors": {
+                  "email": ["The provided credentials are incorrect."]
+              }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 422
+        content: |-
+          {
+              "message": "The given data was invalid.",
+              "errors": {
+                  "email": ["The email field is required."],
+                  "password": ["The password field is required."]
+              }
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - POST
+    uri: api/logout
+    metadata:
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for user authentication and management
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Logout user (Revoke the token)'
+      description: "Revoke the user's current authentication token."
+      authenticated: true
+      custom: []
+    headers:
+      Authorization: 'Bearer {token}'
       Content-Type: application/json
       Accept: application/json
     urlParameters: []
@@ -26,16 +234,87 @@ endpoints:
     fileParameters: []
     responses:
       -
+        status: 200
+        content: |-
+          {
+              "message": "Successfully logged out"
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
         status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
+        content: |-
+          {
+              "message": "Unauthenticated."
+          }
+        headers: []
+        description: ''
         custom: []
     responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
+    uri: api/user
+    metadata:
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for user authentication and management
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get authenticated user details'
+      description: 'Returns the details of the currently authenticated user.'
+      authenticated: true
+      custom: []
+    headers:
+      Authorization: 'Bearer {token}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+              "id": 1,
+              "name": "John Doe",
+              "email": "user@example.com",
+              "email_verified_at": "2023-01-01T12:00:00.000000Z",
+              "created_at": "2023-01-01T12:00:00.000000Z",
+              "updated_at": "2023-01-01T12:00:00.000000Z"
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 401
+        content: |-
+          {
+              "message": "Unauthenticated."
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null

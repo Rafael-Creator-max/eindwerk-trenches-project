@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CryptocurrencyController;
 use App\Http\Controllers\Api\TokenAuthController;
 
 // Authentication routes
+Route::post('/register', [TokenAuthController::class, 'register']);
 Route::post('/login', [TokenAuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [TokenAuthController::class, 'logout']);
 Route::middleware('auth:sanctum')->get('/user', [TokenAuthController::class, 'user']);
@@ -13,7 +14,9 @@ Route::middleware('auth:sanctum')->get('/user', [TokenAuthController::class, 'us
 // Public cryptocurrency routes
 Route::get('cryptocurrencies', [CryptocurrencyController::class, 'index']);
 Route::get('cryptocurrencies/{id}', [CryptocurrencyController::class, 'show']);
+// Both endpoints point to the same controller method for backward compatibility
 Route::get('cryptocurrencies/{id}/chart', [CryptocurrencyController::class, 'priceHistory']);
+Route::get('cryptocurrencies/{id}/price-history', [CryptocurrencyController::class, 'priceHistory']);
 Route::get('cryptocurrencies/trending', [CryptocurrencyController::class, 'trending']);
 
 // Protected routes (require authentication)
