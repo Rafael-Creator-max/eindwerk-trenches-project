@@ -10,8 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // Debug logs disabled for production
-  // const [logs, setLogs] = useState<string[]>([]);
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
   
@@ -35,26 +33,15 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, loading]);
 
-  // Debug logging disabled for production
-  // const addLog = (message: string) => {
-  //   console.log(message);
-  //   setLogs(prev => [...prev, message]);
-  // };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     setError('');
     setLoading(true);
-    // Debug logging disabled
-    // addLog('=== Form submission started ===');
-    // addLog(`Attempting to log in with: ${email}`);
     
     try {
-      // addLog('Authenticating...');
-      const user = await login(email, password);
-      // addLog('Authentication successful');
+      await login(email, password);
       
       const urlParams = new URLSearchParams(window.location.search);
       let redirectTo = urlParams.get('from') || '/dashboard';
@@ -63,7 +50,6 @@ export default function LoginPage() {
         redirectTo = '/dashboard';
       }
       
-      // addLog(`Redirecting to: ${redirectTo}`);
       router.replace(redirectTo);
       
     } catch (error: unknown) {
@@ -92,10 +78,8 @@ export default function LoginPage() {
       }
       
       setError(errorMessage);
-      // addLog(`Login failed: ${errorMessage}`);
     } finally {
       setLoading(false);
-      // addLog('=== Form submission completed ===');
     }
     
     return false;
@@ -103,7 +87,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-8 mb-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
@@ -187,7 +171,7 @@ export default function LoginPage() {
         </form>
       </div>
       
-      {/* Debug Logs - Disabled for production
+      {/* Debug Logs - Commented out for production
       <div className="mt-8 w-full max-w-4xl">
         <div className="bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-xs overflow-auto max-h-64">
           <div className="font-bold mb-2 text-white">Debug Logs:</div>
