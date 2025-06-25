@@ -26,7 +26,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/dashboard" className="text-xl font-bold text-gray-900">
-                  Crypto Tracker
+                  Trenches
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

@@ -1,10 +1,9 @@
 'use client';
 
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,40 +16,24 @@ export default function LoginPage() {
   
   // Redirect if already authenticated
   useEffect(() => {
-    // Only run this effect on the client side
     if (typeof window === 'undefined') return;
     
-    // Get the redirect URL from the query parameters first
     const urlParams = new URLSearchParams(window.location.search);
     let from = urlParams.get('from') || '/dashboard';
     
-    // Ensure we don't redirect back to login
     if (from.startsWith('/login')) {
       from = '/dashboard';
     }
     
-    console.log('LoginPage - Auth state:', { 
-      isAuthenticated, 
-      loading, 
-      path: window.location.pathname,
-      from 
-    });
-    
-    // Only redirect if we're authenticated and not loading
     if (isAuthenticated && !loading) {
-      console.log('LoginPage - User is authenticated, redirecting to:', from);
-      
-      // Use a small timeout to ensure the state is fully updated
       const timer = setTimeout(() => {
-        console.log('LoginPage - Executing redirect to:', from);
-        window.location.href = from; // Force a full page reload
+        window.location.href = from;
       }, 50);
       
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, loading]);
 
-  // Function to add logs to the state
   const addLog = (message: string) => {
     console.log(message);
     setLogs(prev => [...prev, message]);
@@ -60,34 +43,24 @@ export default function LoginPage() {
     e.preventDefault();
     e.stopPropagation();
     
-    // Clear any previous errors
     setError('');
     setLoading(true);
     addLog('=== Form submission started ===');
     addLog(`Attempting to log in with: ${email}`);
     
     try {
-      console.log('Starting login process...');
       addLog('Authenticating...');
-      
-      // Perform the login
       const user = await login(email, password);
-      console.log('Login successful, user:', user);
       addLog('Authentication successful');
       
-      // Get the redirect URL from query params or default to dashboard
       const urlParams = new URLSearchParams(window.location.search);
       let redirectTo = urlParams.get('from') || '/dashboard';
       
-      // Ensure we don't redirect back to login
       if (redirectTo.startsWith('/login')) {
         redirectTo = '/dashboard';
       }
       
-      console.log('Redirecting to:', redirectTo);
       addLog(`Redirecting to: ${redirectTo}`);
-      
-      // Use replace to prevent going back to login page
       router.replace(redirectTo);
       
     } catch (error: unknown) {
@@ -104,18 +77,14 @@ export default function LoginPage() {
       };
       
       if (err.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         if (err.response.status === 401) {
           errorMessage = 'Invalid email or password';
         } else if (err.response.data?.message) {
           errorMessage = err.response.data.message;
         }
       } else if (err.request) {
-        // The request was made but no response was received
         errorMessage = 'No response from server. Please check your internet connection.';
       } else if (err.message) {
-        // Something happened in setting up the request
         errorMessage = err.message;
       }
       
@@ -138,11 +107,12 @@ export default function LoginPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
               create a new account
-            </a>
+            </Link>
           </p>
         </div>
+        
         {error && (
           <div className="bg-red-50 border-l-4 border-red-400 p-4">
             <div className="flex">
@@ -157,7 +127,8 @@ export default function LoginPage() {
             </div>
           </div>
         )}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit} action="#" method="POST">
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <input type="hidden" name="remember" defaultValue="true" />
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
@@ -208,13 +179,13 @@ export default function LoginPage() {
             </div>
 
             <div className="text-sm">
-              <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                 Forgot your password?
-              </a>
+              </Link>
             </div>
           </div>
 
-          <div>
+          <div className="space-y-4">
             <button
               type="submit"
               disabled={loading}
@@ -222,6 +193,22 @@ export default function LoginPage() {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-50 text-gray-500">or</span>
+              </div>
+            </div>
+            
+            <Link
+              href="/cryptocurrencies"
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Back to Home
+            </Link>
           </div>
         </form>
       </div>
