@@ -106,6 +106,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | This configuration controls the email verification settings including
+    | the expiration time for the verification link and the redirect URL
+    | after successful verification.
+    |
+    */
+    
+    'verification' => [
+        'expire' => env('EMAIL_VERIFY_EXPIRE', 60), // minutes
+        'redirect' => env('EMAIL_VERIFY_REDIRECT', '/home'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Password Confirmation Timeout
     |--------------------------------------------------------------------------
     |

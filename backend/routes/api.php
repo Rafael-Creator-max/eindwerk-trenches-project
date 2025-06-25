@@ -21,6 +21,9 @@ Route::get('cryptocurrencies/trending', [CryptocurrencyController::class, 'trend
 
 // Protected routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
+    // Email verification
+    Route::post('/email/verification-notification', [TokenAuthController::class, 'resendVerificationEmail']);
+    
     // Follow/Unfollow routes
     Route::post('cryptocurrencies/{id}/follow', [CryptocurrencyController::class, 'follow']);
     Route::delete('cryptocurrencies/{id}/follow', [CryptocurrencyController::class, 'unfollow']);

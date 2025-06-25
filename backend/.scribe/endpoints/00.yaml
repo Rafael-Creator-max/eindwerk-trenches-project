@@ -15,7 +15,7 @@ endpoints:
       subgroup: ''
       subgroupDescription: ''
       title: 'Register a new user'
-      description: 'Create a new user account with the provided information.'
+      description: 'Create a new user account with the provided information and send verification email.'
       authenticated: false
       custom: []
     headers:
@@ -77,15 +77,16 @@ endpoints:
         status: 201
         content: |-
           {
-              "message": "User registered successfully",
+              "message": "User registered successfully. Please check your email to verify your account.",
               "user": {
                   "name": "John Doe",
                   "email": "user@example.com",
+                  "email_verified_at": null,
                   "updated_at": "2023-01-01T12:00:00.000000Z",
                   "created_at": "2023-01-01T12:00:00.000000Z",
                   "id": 1
               },
-              "token": "1|a1b2c3d4..."
+              "requires_verification": true
           }
         headers: []
         description: ''
@@ -272,7 +273,7 @@ endpoints:
       subgroup: ''
       subgroupDescription: ''
       title: 'Get authenticated user details'
-      description: 'Returns the details of the currently authenticated user.'
+      description: 'Returns the details of the currently authenticated user including email verification status.'
       authenticated: true
       custom: []
     headers:
@@ -296,7 +297,72 @@ endpoints:
               "email": "user@example.com",
               "email_verified_at": "2023-01-01T12:00:00.000000Z",
               "created_at": "2023-01-01T12:00:00.000000Z",
-              "updated_at": "2023-01-01T12:00:00.000000Z"
+              "updated_at": "2023-01-01T12:00:00.000000Z",
+              "is_verified": true
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 401
+        content: |-
+          {
+              "message": "Unauthenticated."
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - POST
+    uri: api/email/verification-notification
+    metadata:
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for user authentication and management
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Resend the email verification notification.'
+      description: ''
+      authenticated: true
+      custom: []
+    headers:
+      Authorization: 'Bearer {token}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+              "message": "Verification link resent to your email address."
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 400
+        content: |-
+          {
+              "message": "Email already verified.",
+              "is_verified": true
           }
         headers: []
         description: ''
