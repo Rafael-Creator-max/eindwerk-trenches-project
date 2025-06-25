@@ -106,7 +106,7 @@ export default function CryptocurrencyDetailPage() {
             validPrices.sort((a: any, b: any) => a.timestamp - b.timestamp);
             
             // Format data for the chart
-            const formattedData = validPrices.map(item => ({
+            const formattedData = validPrices.map((item: { timestamp: string | number | Date; price: any; }) => ({
               date: new Date(item.timestamp).toLocaleDateString(),
               price: item.price,
               timestamp: item.timestamp
@@ -426,11 +426,10 @@ export default function CryptocurrencyDetailPage() {
             </div>
 
             <div className="mt-8">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Price Chart</h3>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Price Chart</h3>
                 <div className="flex space-x-2">
-                  {['1', '7', '30', '90', 'max'].map((days) => (
+                  {['1', '7', '30', '90'].map((days) => (
                     <button
                       key={days}
                       onClick={() => setTimeRange(days)}
@@ -440,7 +439,7 @@ export default function CryptocurrencyDetailPage() {
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
                       }`}
                     >
-                      {days === 'max' ? 'All' : `${days}d`}
+                      {days}d
                     </button>
                   ))}
                 </div>
