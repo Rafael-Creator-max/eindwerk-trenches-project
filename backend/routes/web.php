@@ -132,8 +132,20 @@ Route::get('/test-email', function () {
 });
 
 Route::get('/run-migrate', function () {
-    Artisan::call('migrate', ['--force' => true]);
-    return 'Migrations complete!';
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+
+        return nl2br(\Illuminate\Support\Facades\Artisan::output());
+    } catch (\Throwable $e) {
+        return response(
+            nl2br(
+                $e->getMessage()
+                . "\n\nin " . $e->getFile()
+                . ":" . $e->getLine()
+            ),
+            500
+        );
+    }
 });
 
 Route::get('/run-scribe', function () {
