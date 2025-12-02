@@ -4,6 +4,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 
 // Email Verification Routes
 Route::get('/email/verify', function () {
@@ -128,4 +129,14 @@ Route::get('/test-email', function () {
     } catch (\Exception $e) {
         return 'Error sending email: ' . $e->getMessage();
     }
+});
+
+Route::get('/run-migrate', function () {
+    Artisan::call('migrate', ['--force' => true]);
+    return 'Migrations complete!';
+});
+
+Route::get('/run-scribe', function () {
+    Artisan::call('scribe:generate');
+    return 'Scribe generated!';
 });
