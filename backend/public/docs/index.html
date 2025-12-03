@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "https://backend.ddev.site";
+        var tryItOutBaseUrl = "https://eindwerk-trenches-project-production.up.railway.app";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -155,7 +155,7 @@
         <h1 id="introduction">Introduction</h1>
 <p>API documentation for the Crypto Tracker application. This API allows users to track cryptocurrency prices, follow/unfollow cryptocurrencies, and get market data.</p>
 <aside>
-    <strong>Base URL</strong>: <code>https://backend.ddev.site</code>
+    <strong>Base URL</strong>: <code>https://eindwerk-trenches-project-production.up.railway.app</code>
 </aside>
 <pre><code>This documentation aims to provide all the information you need to work with our API.
 
@@ -184,7 +184,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://backend.ddev.site/api/register" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/register" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -198,7 +198,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/register"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/register"
 );
 
 const headers = {
@@ -387,7 +387,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://backend.ddev.site/api/login" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/login" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -399,7 +399,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/login"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/login"
 );
 
 const headers = {
@@ -579,7 +579,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://backend.ddev.site/api/logout" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/logout" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -587,7 +587,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/logout"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/logout"
 );
 
 const headers = {
@@ -719,7 +719,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://backend.ddev.site/api/user" \
+    --get "https://eindwerk-trenches-project-production.up.railway.app/api/user" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -727,7 +727,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/user"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/user"
 );
 
 const headers = {
@@ -865,7 +865,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://backend.ddev.site/api/email/verification-notification" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/email/verification-notification" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -873,7 +873,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/email/verification-notification"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/email/verification-notification"
 );
 
 const headers = {
@@ -1019,14 +1019,14 @@ Results are ordered by market cap (descending) and cached for 5 minutes to impro
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://backend.ddev.site/api/cryptocurrencies?page=1&amp;per_page=20&amp;vs_currency=eur&amp;order=volume_desc&amp;sparkline=1&amp;price_change_percentage=1h%2C24h%2C7d" \
+    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies?page=1&amp;per_page=20&amp;vs_currency=eur&amp;order=volume_desc&amp;sparkline=1&amp;price_change_percentage=1h%2C24h%2C7d" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/cryptocurrencies"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies"
 );
 
 const params = {
@@ -1269,7 +1269,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://backend.ddev.site/api/cryptocurrencies/bitcoin" \
+    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin" \
     --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -1277,7 +1277,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/cryptocurrencies/bitcoin"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin"
 );
 
 const headers = {
@@ -1466,14 +1466,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://backend.ddev.site/api/cryptocurrencies/architecto/chart" \
+    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/chart" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/cryptocurrencies/architecto/chart"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/chart"
 );
 
 const headers = {
@@ -1618,14 +1618,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://backend.ddev.site/api/cryptocurrencies/architecto/price-history" \
+    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/price-history" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/cryptocurrencies/architecto/price-history"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/price-history"
 );
 
 const headers = {
@@ -1774,7 +1774,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://backend.ddev.site/api/forgot-password" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/forgot-password" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1785,7 +1785,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/forgot-password"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/forgot-password"
 );
 
 const headers = {
@@ -1903,7 +1903,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://backend.ddev.site/api/reset-password" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/reset-password" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1916,7 +1916,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/reset-password"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/reset-password"
 );
 
 const headers = {
@@ -2064,7 +2064,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://backend.ddev.site/api/cryptocurrencies/architecto/follow" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/follow" \
     --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2072,7 +2072,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/cryptocurrencies/architecto/follow"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/follow"
 );
 
 const headers = {
@@ -2237,7 +2237,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "https://backend.ddev.site/api/cryptocurrencies/bitcoin/follow" \
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin/follow" \
     --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2245,7 +2245,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/cryptocurrencies/bitcoin/follow"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin/follow"
 );
 
 const headers = {
@@ -2399,7 +2399,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://backend.ddev.site/api/user/cryptocurrencies" \
+    --get "https://eindwerk-trenches-project-production.up.railway.app/api/user/cryptocurrencies" \
     --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2407,7 +2407,7 @@ Requires authentication via Bearer token.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://backend.ddev.site/api/user/cryptocurrencies"
+    "https://eindwerk-trenches-project-production.up.railway.app/api/user/cryptocurrencies"
 );
 
 const headers = {

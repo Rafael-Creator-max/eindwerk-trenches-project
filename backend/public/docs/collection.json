@@ -5,12 +5,12 @@
             "key": "baseUrl",
             "type": "string",
             "name": "string",
-            "value": "https:\/\/backend.ddev.site"
+            "value": "https:\/\/eindwerk-trenches-project-production.up.railway.app"
         }
     ],
     "info": {
         "name": "Crypto Tracker API Documentation",
-        "_postman_id": "3e34e4b1-43ae-4442-8ca7-dd21055019db",
+        "_postman_id": "b8757a15-068a-4918-aac5-a52d4256d58b",
         "description": "API documentation for the Crypto Tracker application. This API allows users to track cryptocurrency prices, follow\/unfollow cryptocurrencies, and get market data.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },

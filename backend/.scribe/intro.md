@@ -3,7 +3,7 @@
 API documentation for the Crypto Tracker application. This API allows users to track cryptocurrency prices, follow/unfollow cryptocurrencies, and get market data.
 
 <aside>
-    <strong>Base URL</strong>: <code>https://backend.ddev.site</code>
+    <strong>Base URL</strong>: <code>https://eindwerk-trenches-project-production.up.railway.app</code>
 </aside>
 
     This documentation aims to provide all the information you need to work with our API.
