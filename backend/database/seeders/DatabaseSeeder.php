@@ -20,8 +20,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
         
-        // Seed asset types
+        // Seed admin user and asset types
         $this->call([
+            AdminUserSeeder::class,
             AssetTypeSeeder::class,
         ]);
     }

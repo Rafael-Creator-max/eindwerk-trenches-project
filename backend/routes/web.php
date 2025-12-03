@@ -164,3 +164,20 @@ Route::get('/run-scribe', function () {
         );
     }
 });
+
+Route::get('/run-seed', function () {
+    try {
+        Artisan::call('db:seed', ['--force' => true]);
+
+        return nl2br(Artisan::output());
+    } catch (\Throwable $e) {
+        return response(
+            nl2br(
+                $e->getMessage()
+                . "\n\nin " . $e->getFile()
+                . ":" . $e->getLine()
+            ),
+            500
+        );
+    }
+});
