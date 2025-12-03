@@ -159,10 +159,14 @@ class CryptocurrencyController extends Controller
      */
     public function show($id)
     {
-        $crypto = Cryptocurrency::where('slug', $id)
-            ->orWhere('id', $id)
-            ->with('assetType')
-            ->firstOrFail();
+        $identifier = request()->input('cryptocurrency', $id);
+        $query = Cryptocurrency::query()->with('assetType');
+        if (is_numeric($identifier)) {
+            $query->where('id', (int) $identifier);
+        } else {
+            $query->where('slug', $identifier);
+        }
+        $crypto = $query->firstOrFail();
 
         return response()->json(['data' => $crypto]);
     }
@@ -193,9 +197,14 @@ class CryptocurrencyController extends Controller
     public function follow($id)
     {
         $user = Auth::user();
-        $crypto = Cryptocurrency::where('slug', $id)
-            ->orWhere('id', $id)
-            ->firstOrFail();
+        $identifier = request()->input('cryptocurrency', $id);
+        $query = Cryptocurrency::query();
+        if (is_numeric($identifier)) {
+            $query->where('id', (int) $identifier);
+        } else {
+            $query->where('slug', $identifier);
+        }
+        $crypto = $query->firstOrFail();
         
         // Check if already following
         if (!$user->cryptocurrencies()->where('cryptocurrency_id', $crypto->id)->exists()) {
@@ -231,9 +240,14 @@ class CryptocurrencyController extends Controller
     public function unfollow($id)
     {
         $user = Auth::user();
-        $crypto = Cryptocurrency::where('slug', $id)
-            ->orWhere('id', $id)
-            ->firstOrFail();
+        $identifier = request()->input('cryptocurrency', $id);
+        $query = Cryptocurrency::query();
+        if (is_numeric($identifier)) {
+            $query->where('id', (int) $identifier);
+        } else {
+            $query->where('slug', $identifier);
+        }
+        $crypto = $query->firstOrFail();
         
         $user->cryptocurrencies()->detach($crypto->id);
         
@@ -333,9 +347,14 @@ class CryptocurrencyController extends Controller
      */
     public function priceHistory($id, CoinGeckoService $coinGeckoService)
     {
-        $crypto = Cryptocurrency::where('slug', $id)
-            ->orWhere('id', $id)
-            ->firstOrFail();
+        $identifier = request()->input('cryptocurrency', $id);
+        $query = Cryptocurrency::query();
+        if (is_numeric($identifier)) {
+            $query->where('id', (int) $identifier);
+        } else {
+            $query->where('slug', $identifier);
+        }
+        $crypto = $query->firstOrFail();
 
         $days = request()->input('days', 7);
         $history = $coinGeckoService->getPriceHistory($crypto->external_id, $days);
