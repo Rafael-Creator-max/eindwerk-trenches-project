@@ -133,9 +133,9 @@ Route::get('/test-email', function () {
 
 Route::get('/run-migrate', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        Artisan::call('migrate', ['--force' => true]);
 
-        return nl2br(\Illuminate\Support\Facades\Artisan::output());
+        return nl2br(Artisan::output());
     } catch (\Throwable $e) {
         return response(
             nl2br(
@@ -149,6 +149,18 @@ Route::get('/run-migrate', function () {
 });
 
 Route::get('/run-scribe', function () {
-    Artisan::call('scribe:generate');
-    return 'Scribe generated!';
+    try {
+        Artisan::call('scribe:generate');
+
+        return nl2br(Artisan::output());
+    } catch (\Throwable $e) {
+        return response(
+            nl2br(
+                $e->getMessage()
+                . "\n\nin " . $e->getFile()
+                . ":" . $e->getLine()
+            ),
+            500
+        );
+    }
 });

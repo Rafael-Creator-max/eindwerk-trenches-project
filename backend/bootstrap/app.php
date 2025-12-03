@@ -20,7 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         
         $middleware->trustProxies(at: '*');
-        $middleware->trustHosts(at: ['*']);
+        // Disable trusted hosts patterns to avoid invalid regex from '*'.
+        $middleware->trustHosts(at: []);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
