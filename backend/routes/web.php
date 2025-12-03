@@ -110,6 +110,10 @@ Route::middleware([
 
 // Test route for syncing crypto data
 Route::get('/fetch-and-store-cryptos', function () {
+    // Allow longer execution for heavy syncs
+    @set_time_limit(300);
+    @ini_set('max_execution_time', '300');
+
     (new \App\Services\CoinGeckoService)->storeMarketData();
     return 'Synced!';
 });

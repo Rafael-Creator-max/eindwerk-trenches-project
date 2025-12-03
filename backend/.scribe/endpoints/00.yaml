@@ -4,10 +4,12 @@ description: |-
   APIs for user authentication and management
 endpoints:
   -
+    custom: []
     httpMethods:
       - POST
     uri: api/register
     metadata:
+      custom: []
       groupName: Authentication
       groupDescription: |-
 
@@ -17,7 +19,7 @@ endpoints:
       title: 'Register a new user'
       description: 'Create a new user account with the provided information and send verification email.'
       authenticated: false
-      custom: []
+      deprecated: false
     headers:
       Content-Type: application/json
       Accept: application/json
@@ -27,6 +29,7 @@ endpoints:
     cleanQueryParameters: []
     bodyParameters:
       name:
+        custom: []
         name: name
         description: 'The name of the user.'
         required: true
@@ -35,8 +38,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       email:
+        custom: []
         name: email
         description: 'The email address of the user. Must be unique.'
         required: true
@@ -45,8 +49,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       password:
+        custom: []
         name: password
         description: 'The desired password. Minimum 8 characters.'
         required: true
@@ -55,8 +60,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       password_confirmation:
+        custom: []
         name: password_confirmation
         description: 'Confirm the password. Must match password.'
         required: true
@@ -65,7 +71,7 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
     cleanBodyParameters:
       name: 'John Doe'
       email: user@example.com
@@ -74,6 +80,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 201
         content: |-
           {
@@ -90,8 +97,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 422
         content: |-
           {
@@ -103,18 +110,18 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth: []
     controller: null
     method: null
     route: null
-    custom: []
   -
+    custom: []
     httpMethods:
       - POST
     uri: api/login
     metadata:
+      custom: []
       groupName: Authentication
       groupDescription: |-
 
@@ -124,7 +131,7 @@ endpoints:
       title: 'Authenticate user and create token'
       description: 'Authenticate a user with email and password to receive an access token.'
       authenticated: false
-      custom: []
+      deprecated: false
     headers:
       Content-Type: application/json
       Accept: application/json
@@ -134,6 +141,7 @@ endpoints:
     cleanQueryParameters: []
     bodyParameters:
       email:
+        custom: []
         name: email
         description: 'The email address of the user.'
         required: true
@@ -142,8 +150,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       password:
+        custom: []
         name: password
         description: "The user's password."
         required: true
@@ -152,13 +161,14 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
     cleanBodyParameters:
       email: user@example.com
       password: your-secure-password
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -175,8 +185,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 401
         content: |-
           {
@@ -187,8 +197,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 422
         content: |-
           {
@@ -200,18 +210,18 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth: []
     controller: null
     method: null
     route: null
-    custom: []
   -
+    custom: []
     httpMethods:
       - POST
     uri: api/logout
     metadata:
+      custom: []
       groupName: Authentication
       groupDescription: |-
 
@@ -221,7 +231,7 @@ endpoints:
       title: 'Logout user (Revoke the token)'
       description: "Revoke the user's current authentication token."
       authenticated: true
-      custom: []
+      deprecated: false
     headers:
       Authorization: 'Bearer {token}'
       Content-Type: application/json
@@ -235,6 +245,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -242,8 +253,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 401
         content: |-
           {
@@ -251,7 +262,6 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth:
       - headers
@@ -260,12 +270,13 @@ endpoints:
     controller: null
     method: null
     route: null
-    custom: []
   -
+    custom: []
     httpMethods:
       - GET
     uri: api/user
     metadata:
+      custom: []
       groupName: Authentication
       groupDescription: |-
 
@@ -275,7 +286,7 @@ endpoints:
       title: 'Get authenticated user details'
       description: 'Returns the details of the currently authenticated user including email verification status.'
       authenticated: true
-      custom: []
+      deprecated: false
     headers:
       Authorization: 'Bearer {token}'
       Content-Type: application/json
@@ -289,6 +300,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -302,8 +314,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 401
         content: |-
           {
@@ -311,7 +323,6 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth:
       - headers
@@ -320,12 +331,13 @@ endpoints:
     controller: null
     method: null
     route: null
-    custom: []
   -
+    custom: []
     httpMethods:
       - POST
     uri: api/email/verification-notification
     metadata:
+      custom: []
       groupName: Authentication
       groupDescription: |-
 
@@ -335,7 +347,7 @@ endpoints:
       title: 'Resend the email verification notification.'
       description: ''
       authenticated: true
-      custom: []
+      deprecated: false
     headers:
       Authorization: 'Bearer {token}'
       Content-Type: application/json
@@ -349,6 +361,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -356,8 +369,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 400
         content: |-
           {
@@ -366,8 +379,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 401
         content: |-
           {
@@ -375,7 +388,6 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth:
       - headers
@@ -384,4 +396,3 @@ endpoints:
     controller: null
     method: null
     route: null
-    custom: []

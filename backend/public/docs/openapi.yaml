@@ -1,0 +1,956 @@
+openapi: 3.0.3
+info:
+  title: 'Crypto Tracker API Documentation'
+  description: 'API documentation for the Crypto Tracker application. This API allows users to track cryptocurrency prices, follow/unfollow cryptocurrencies, and get market data.'
+  version: 1.0.0
+servers:
+  -
+    url: 'https://backend.ddev.site'
+tags:
+  -
+    name: Authentication
+    description: "\nAPIs for user authentication and management"
+  -
+    name: 'Cryptocurrency Management'
+    description: "\nAPIs for managing cryptocurrencies and user interactions with them"
+  -
+    name: Endpoints
+    description: ''
+  -
+    name: 'User Actions'
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.'
+security:
+  -
+    default: []
+paths:
+  /api/register:
+    post:
+      summary: 'Register a new user'
+      operationId: registerANewUser
+      description: 'Create a new user account with the provided information and send verification email.'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'User registered successfully. Please check your email to verify your account.'
+                  user:
+                    name: 'John Doe'
+                    email: user@example.com
+                    email_verified_at: null
+                    updated_at: '2023-01-01T12:00:00.000000Z'
+                    created_at: '2023-01-01T12:00:00.000000Z'
+                    id: 1
+                  requires_verification: true
+                properties:
+                  message:
+                    type: string
+                    example: 'User registered successfully. Please check your email to verify your account.'
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: 'John Doe'
+                      email:
+                        type: string
+                        example: user@example.com
+                      email_verified_at:
+                        type: string
+                        example: null
+                      updated_at:
+                        type: string
+                        example: '2023-01-01T12:00:00.000000Z'
+                      created_at:
+                        type: string
+                        example: '2023-01-01T12:00:00.000000Z'
+                      id:
+                        type: integer
+                        example: 1
+                  requires_verification:
+                    type: boolean
+                    example: true
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The given data was invalid.'
+                  errors:
+                    email:
+                      - 'The email has already been taken.'
+                    password:
+                      - 'The password confirmation does not match.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The given data was invalid.'
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'The email has already been taken.'
+                        items:
+                          type: string
+                      password:
+                        type: array
+                        example:
+                          - 'The password confirmation does not match.'
+                        items:
+                          type: string
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'The name of the user.'
+                  example: 'John Doe'
+                email:
+                  type: string
+                  description: 'The email address of the user. Must be unique.'
+                  example: user@example.com
+                password:
+                  type: string
+                  description: 'The desired password. Minimum 8 characters.'
+                  example: your-secure-password
+                password_confirmation:
+                  type: string
+                  description: 'Confirm the password. Must match password.'
+                  example: your-secure-password
+              required:
+                - name
+                - email
+                - password
+                - password_confirmation
+      security: []
+  /api/login:
+    post:
+      summary: 'Authenticate user and create token'
+      operationId: authenticateUserAndCreateToken
+      description: 'Authenticate a user with email and password to receive an access token.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  access_token: 1|a1b2c3d4...
+                  token_type: Bearer
+                  user:
+                    id: 1
+                    name: 'John Doe'
+                    email: user@example.com
+                    email_verified_at: '2023-01-01T12:00:00.000000Z'
+                    created_at: '2023-01-01T12:00:00.000000Z'
+                    updated_at: '2023-01-01T12:00:00.000000Z'
+                properties:
+                  access_token:
+                    type: string
+                    example: 1|a1b2c3d4...
+                  token_type:
+                    type: string
+                    example: Bearer
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'John Doe'
+                      email:
+                        type: string
+                        example: user@example.com
+                      email_verified_at:
+                        type: string
+                        example: '2023-01-01T12:00:00.000000Z'
+                      created_at:
+                        type: string
+                        example: '2023-01-01T12:00:00.000000Z'
+                      updated_at:
+                        type: string
+                        example: '2023-01-01T12:00:00.000000Z'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The provided credentials are incorrect.'
+                  errors:
+                    email:
+                      - 'The provided credentials are incorrect.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The provided credentials are incorrect.'
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'The provided credentials are incorrect.'
+                        items:
+                          type: string
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The given data was invalid.'
+                  errors:
+                    email:
+                      - 'The email field is required.'
+                    password:
+                      - 'The password field is required.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The given data was invalid.'
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'The email field is required.'
+                        items:
+                          type: string
+                      password:
+                        type: array
+                        example:
+                          - 'The password field is required.'
+                        items:
+                          type: string
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'The email address of the user.'
+                  example: user@example.com
+                password:
+                  type: string
+                  description: "The user's password."
+                  example: your-secure-password
+              required:
+                - email
+                - password
+      security: []
+  /api/logout:
+    post:
+      summary: 'Logout user (Revoke the token)'
+      operationId: logoutUserRevokeTheToken
+      description: "Revoke the user's current authentication token."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Successfully logged out'
+                properties:
+                  message:
+                    type: string
+                    example: 'Successfully logged out'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Authentication
+  /api/user:
+    get:
+      summary: 'Get authenticated user details'
+      operationId: getAuthenticatedUserDetails
+      description: 'Returns the details of the currently authenticated user including email verification status.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  name: 'John Doe'
+                  email: user@example.com
+                  email_verified_at: '2023-01-01T12:00:00.000000Z'
+                  created_at: '2023-01-01T12:00:00.000000Z'
+                  updated_at: '2023-01-01T12:00:00.000000Z'
+                  is_verified: true
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 'John Doe'
+                  email:
+                    type: string
+                    example: user@example.com
+                  email_verified_at:
+                    type: string
+                    example: '2023-01-01T12:00:00.000000Z'
+                  created_at:
+                    type: string
+                    example: '2023-01-01T12:00:00.000000Z'
+                  updated_at:
+                    type: string
+                    example: '2023-01-01T12:00:00.000000Z'
+                  is_verified:
+                    type: boolean
+                    example: true
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Authentication
+  /api/email/verification-notification:
+    post:
+      summary: 'Resend the email verification notification.'
+      operationId: resendTheEmailVerificationNotification
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Verification link resent to your email address.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Verification link resent to your email address.'
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Email already verified.'
+                  is_verified: true
+                properties:
+                  message:
+                    type: string
+                    example: 'Email already verified.'
+                  is_verified:
+                    type: boolean
+                    example: true
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Authentication
+  /api/cryptocurrencies:
+    get:
+      summary: 'Get List of All Cryptocurrencies'
+      operationId: getListOfAllCryptocurrencies
+      description: "Returns a paginated list of all cryptocurrencies with their current market data.\nResults are ordered by market cap (descending) and cached for 5 minutes to improve performance."
+      parameters:
+        -
+          in: query
+          name: page
+          description: 'The page number to return.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'The page number to return.'
+            example: 1
+        -
+          in: query
+          name: per_page
+          description: 'Number of items per page. Default: 15.'
+          example: 20
+          required: false
+          schema:
+            type: integer
+            description: 'Number of items per page. Default: 15.'
+            example: 20
+        -
+          in: query
+          name: vs_currency
+          description: 'The target currency of market data. Default: usd.'
+          example: eur
+          required: false
+          schema:
+            type: string
+            description: 'The target currency of market data. Default: usd.'
+            example: eur
+        -
+          in: query
+          name: order
+          description: 'The field to order by. Default: market_cap_desc.'
+          example: volume_desc
+          required: false
+          schema:
+            type: string
+            description: 'The field to order by. Default: market_cap_desc.'
+            example: volume_desc
+        -
+          in: query
+          name: sparkline
+          description: 'Include sparkline 7d data. Default: false.'
+          example: true
+          required: false
+          schema:
+            type: boolean
+            description: 'Include sparkline 7d data. Default: false.'
+            example: true
+        -
+          in: query
+          name: price_change_percentage
+          description: 'Include price change percentage. Comma-separated values.'
+          example: '1h,24h,7d'
+          required: false
+          schema:
+            type: string
+            description: 'Include price change percentage. Comma-separated values.'
+            example: '1h,24h,7d'
+      responses:
+        200:
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"asset_type_id\": 1,\n      \"symbol\": \"BTC\",\n      \"name\": \"Bitcoin\",\n      \"slug\": \"bitcoin\",\n      \"external_id\": \"bitcoin\",\n      \"current_price\": 50000.00,\n      \"market_cap\": 1000000000000.00,\n      \"market_cap_rank\": 1,\n      \"total_volume\": 50000000000.00,\n      \"high_24h\": 51000.00,\n      \"low_24h\": 49000.00,\n      \"price_change_24h\": 1000.00,\n      \"price_change_percentage_24h\": 2.04,\n      \"market_cap_change_24h\": 20000000000.00,\n      \"market_cap_change_percentage_24h\": 2.04,\n      \"circulating_supply\": 18796831.0,\n      \"total_supply\": 21000000.0,\n      \"max_supply\": 21000000.0,\n      \"ath\": 69045.00,\n      \"ath_change_percentage\": -27.59,\n      \"ath_date\": \"2021-11-10T14:24:11.849Z\",\n      \"atl\": 67.81,\n      \"atl_change_percentage\": 73630.19,\n      \"atl_date\": \"2013-07-06T00:00:00.000Z\",\n      \"last_updated\": \"2023-01-01T12:00:00.000Z\",\n      \"price_change_percentage_1h_in_currency\": 0.1,\n      \"price_change_percentage_24h_in_currency\": 2.04,\n      \"price_change_percentage_7d_in_currency\": -5.24,\n      \"image\": \"https://assets.coingecko.com/coins/images/1/large/bitcoin.png\",\n      \"roi\": null,\n      \"sparkline_in_7d\": {\n        \"price\": [\n          50000.00, 50200.00, 50100.00, 50300.00, 50400.00\n        ]\n      }\n      \"price_change_24h\": \"2.50000000\",\n      \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n      \"updated_at\": \"2023-01-01T00:00:00.000000Z\"\n    },\n    ...\n  ]\n}"
+      tags:
+        - 'Cryptocurrency Management'
+      security: []
+  '/api/cryptocurrencies/{id}':
+    get:
+      summary: 'Unfollow a Cryptocurrency'
+      operationId: unfollowACryptocurrency
+      description: "Allows the authenticated user to unfollow a specific cryptocurrency.\nRequires authentication via Bearer token."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  -
+                    description: ''
+                    type: object
+                    example:
+                      message: 'Successfully unfollowed cryptocurrency'
+                    properties:
+                      message:
+                        type: string
+                        example: 'Successfully unfollowed cryptocurrency'
+                  -
+                    description: ''
+                    type: object
+                    example:
+                      data:
+                        id: 1
+                        asset_type_id: 1
+                        symbol: BTC
+                        name: Bitcoin
+                        slug: bitcoin
+                        external_id: bitcoin
+                        current_price: '50000.00000000'
+                        market_cap: '1000000000000.00'
+                        volume_24h: '50000000000.00'
+                        price_change_24h: '2.50000000'
+                        created_at: '2023-01-01T00:00:00.000000Z'
+                        updated_at: '2023-01-01T00:00:00.000000Z'
+                        asset_type:
+                          id: 1
+                          name: Cryptocurrency
+                          description: 'Digital or virtual currency that uses cryptography for security'
+                          created_at: '2023-01-01T00:00:00.000000Z'
+                          updated_at: '2023-01-01T00:00:00.000000Z'
+                        followers: []
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          asset_type_id:
+                            type: integer
+                            example: 1
+                          symbol:
+                            type: string
+                            example: BTC
+                          name:
+                            type: string
+                            example: Bitcoin
+                          slug:
+                            type: string
+                            example: bitcoin
+                          external_id:
+                            type: string
+                            example: bitcoin
+                          current_price:
+                            type: string
+                            example: '50000.00000000'
+                          market_cap:
+                            type: string
+                            example: '1000000000000.00'
+                          volume_24h:
+                            type: string
+                            example: '50000000000.00'
+                          price_change_24h:
+                            type: string
+                            example: '2.50000000'
+                          created_at:
+                            type: string
+                            example: '2023-01-01T00:00:00.000000Z'
+                          updated_at:
+                            type: string
+                            example: '2023-01-01T00:00:00.000000Z'
+                          asset_type:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                example: 1
+                              name:
+                                type: string
+                                example: Cryptocurrency
+                              description:
+                                type: string
+                                example: 'Digital or virtual currency that uses cryptography for security'
+                              created_at:
+                                type: string
+                                example: '2023-01-01T00:00:00.000000Z'
+                              updated_at:
+                                type: string
+                                example: '2023-01-01T00:00:00.000000Z'
+                          followers:
+                            type: array
+                            example: []
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+        404:
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: '{'
+      tags:
+        - 'Cryptocurrency Management'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The slug or id of the cryptocurrency.'
+        example: bitcoin
+        required: true
+        schema:
+          type: string
+  '/api/cryptocurrencies/{id}/chart':
+    get:
+      summary: 'Get price history for a cryptocurrency'
+      operationId: getPriceHistoryForACryptocurrency
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "{\n  \"data\": {\n    \"prices\": [[timestamp, price], ...],\n    \"market_caps\": [[timestamp, market_cap], ...],\n    \"total_volumes\": [[timestamp, volume], ...]\n  },\n  \"crypto_id\": 1,\n  \"symbol\": \"BTC\",\n  \"name\": \"Bitcoin\"\n}"
+      tags:
+        - 'Cryptocurrency Management'
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the cryptocurrency.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/cryptocurrencies/{id}/price-history':
+    get:
+      summary: 'Get price history for a cryptocurrency'
+      operationId: getPriceHistoryForACryptocurrency
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "{\n  \"data\": {\n    \"prices\": [[timestamp, price], ...],\n    \"market_caps\": [[timestamp, market_cap], ...],\n    \"total_volumes\": [[timestamp, volume], ...]\n  },\n  \"crypto_id\": 1,\n  \"symbol\": \"BTC\",\n  \"name\": \"Bitcoin\"\n}"
+      tags:
+        - 'Cryptocurrency Management'
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the cryptocurrency.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/forgot-password:
+    post:
+      summary: 'Send password reset link'
+      operationId: sendPasswordResetLink
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Must be a valid email address.'
+                  example: gbailey@example.net
+              required:
+                - email
+      security: []
+  /api/reset-password:
+    post:
+      summary: 'Reset password'
+      operationId: resetPassword
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: ''
+                  example: architecto
+                email:
+                  type: string
+                  description: 'Must be a valid email address.'
+                  example: zbailey@example.net
+                password:
+                  type: string
+                  description: 'Must be at least 8 characters.'
+                  example: '-0pBNvYgxw'
+              required:
+                - token
+                - email
+                - password
+      security: []
+  '/api/cryptocurrencies/{id}/follow':
+    post:
+      summary: 'Follow a Cryptocurrency'
+      operationId: followACryptocurrency
+      description: "Allows the authenticated user to follow a specific cryptocurrency.\nRequires authentication via Bearer token."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Successfully followed cryptocurrency'
+                properties:
+                  message:
+                    type: string
+                    example: 'Successfully followed cryptocurrency'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'No query results for model [App\Models\Cryptocurrency]'
+                properties:
+                  message:
+                    type: string
+                    example: 'No query results for model [App\Models\Cryptocurrency]'
+      tags:
+        - 'User Actions'
+    delete:
+      summary: 'Unfollow a Cryptocurrency'
+      operationId: unfollowACryptocurrency
+      description: "Allows the authenticated user to unfollow a specific cryptocurrency.\nRequires authentication via Bearer token."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Successfully unfollowed cryptocurrency'
+                properties:
+                  message:
+                    type: string
+                    example: 'Successfully unfollowed cryptocurrency'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'No query results for model [App\Models\Cryptocurrency]'
+                properties:
+                  message:
+                    type: string
+                    example: 'No query results for model [App\Models\Cryptocurrency]'
+      tags:
+        - 'User Actions'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the cryptocurrency.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: cryptocurrency
+        description: 'The slug of the cryptocurrency to follow.'
+        example: bitcoin
+        required: true
+        schema:
+          type: string
+  /api/user/cryptocurrencies:
+    get:
+      summary: "Get User's Followed Cryptocurrencies"
+      operationId: getUsersFollowedCryptocurrencies
+      description: "Returns a list of all cryptocurrencies that the authenticated user is following.\nRequires authentication via Bearer token."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    asset_type_id:
+                      type: integer
+                      example: 1
+                    symbol:
+                      type: string
+                      example: BTC
+                    name:
+                      type: string
+                      example: Bitcoin
+                    slug:
+                      type: string
+                      example: bitcoin
+                    external_id:
+                      type: string
+                      example: bitcoin
+                    current_price:
+                      type: string
+                      example: '50000.00000000'
+                    market_cap:
+                      type: string
+                      example: '1000000000000.00'
+                    volume_24h:
+                      type: string
+                      example: '50000000000.00'
+                    price_change_24h:
+                      type: string
+                      example: '2.50000000'
+                    created_at:
+                      type: string
+                      example: '2023-01-01T00:00:00.000000Z'
+                    updated_at:
+                      type: string
+                      example: '2023-01-01T00:00:00.000000Z'
+                    pivot:
+                      type: object
+                      properties:
+                        user_id:
+                          type: integer
+                          example: 1
+                        cryptocurrency_id:
+                          type: integer
+                          example: 1
+                    asset_type:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Cryptocurrency
+                        description:
+                          type: string
+                          example: 'Digital or virtual currency that uses cryptography for security'
+                        created_at:
+                          type: string
+                          example: '2023-01-01T00:00:00.000000Z'
+                        updated_at:
+                          type: string
+                          example: '2023-01-01T00:00:00.000000Z'
+                example:
+                  -
+                    id: 1
+                    asset_type_id: 1
+                    symbol: BTC
+                    name: Bitcoin
+                    slug: bitcoin
+                    external_id: bitcoin
+                    current_price: '50000.00000000'
+                    market_cap: '1000000000000.00'
+                    volume_24h: '50000000000.00'
+                    price_change_24h: '2.50000000'
+                    created_at: '2023-01-01T00:00:00.000000Z'
+                    updated_at: '2023-01-01T00:00:00.000000Z'
+                    pivot:
+                      user_id: 1
+                      cryptocurrency_id: 1
+                    asset_type:
+                      id: 1
+                      name: Cryptocurrency
+                      description: 'Digital or virtual currency that uses cryptography for security'
+                      created_at: '2023-01-01T00:00:00.000000Z'
+                      updated_at: '2023-01-01T00:00:00.000000Z'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'User Actions'

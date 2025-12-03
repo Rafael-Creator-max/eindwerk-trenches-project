@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CryptocurrencyResource\Pages;
 use App\Filament\Resources\CryptocurrencyResource\RelationManagers;
 use App\Models\Cryptocurrency;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -14,8 +13,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Actions\Action;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Http;
 
 class CryptocurrencyResource extends Resource
 {
@@ -50,22 +47,11 @@ class CryptocurrencyResource extends Resource
                 Action::make('reload_cryptos')
                     ->label('Reload cryptos')
                     ->icon('heroicon-m-arrow-path')
-                    ->action(function () {
-                        $response = Http::get(url('/fetch-and-store-cryptos'));
-
-                        if ($response->successful()) {
-                            Notification::make()
-                                ->title('Cryptocurrencies reloaded')
-                                ->success()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title('Failed to reload cryptocurrencies')
-                                ->body($response->body())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
+                    ->url(url('/fetch-and-store-cryptos'))
+                    ->openUrlInNewTab()
+                    ->extraAttributes([
+                        'onclick' => 'setTimeout(function(){ window.location.reload() }, 6000)'
+                    ]),
             ])
             ->actions([])
             ->bulkActions([]);

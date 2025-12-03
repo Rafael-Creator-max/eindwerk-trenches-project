@@ -6,10 +6,12 @@ description: |-
   APIs for managing cryptocurrencies and user interactions with them
 endpoints:
   -
+    custom: []
     httpMethods:
       - GET
     uri: api/cryptocurrencies
     metadata:
+      custom: []
       groupName: 'Cryptocurrency Management'
       groupDescription: ''
       subgroup: ''
@@ -19,7 +21,7 @@ endpoints:
         Returns a paginated list of all cryptocurrencies with their current market data.
         Results are ordered by market cap (descending) and cached for 5 minutes to improve performance.
       authenticated: false
-      custom: []
+      deprecated: false
     headers:
       Content-Type: application/json
       Accept: application/json
@@ -27,6 +29,7 @@ endpoints:
     cleanUrlParameters: []
     queryParameters:
       page:
+        custom: []
         name: page
         description: 'The page number to return.'
         required: false
@@ -35,8 +38,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       per_page:
+        custom: []
         name: per_page
         description: 'Number of items per page. Default: 15.'
         required: false
@@ -45,8 +49,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       vs_currency:
+        custom: []
         name: vs_currency
         description: 'The target currency of market data. Default: usd.'
         required: false
@@ -55,8 +60,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       order:
+        custom: []
         name: order
         description: 'The field to order by. Default: market_cap_desc.'
         required: false
@@ -65,8 +71,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       sparkline:
+        custom: []
         name: sparkline
         description: 'Include sparkline 7d data. Default: false.'
         required: false
@@ -75,8 +82,9 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
       price_change_percentage:
+        custom: []
         name: price_change_percentage
         description: 'Include price change percentage. Comma-separated values.'
         required: false
@@ -85,7 +93,7 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
     cleanQueryParameters:
       page: 1
       per_page: 20
@@ -98,6 +106,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -148,18 +157,18 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth: []
     controller: null
     method: null
     route: null
-    custom: []
   -
+    custom: []
     httpMethods:
       - GET
     uri: 'api/cryptocurrencies/{id}'
     metadata:
+      custom: []
       groupName: 'Cryptocurrency Management'
       groupDescription: ''
       subgroup: ''
@@ -169,13 +178,14 @@ endpoints:
         Allows the authenticated user to unfollow a specific cryptocurrency.
         Requires authentication via Bearer token.
       authenticated: true
-      custom: []
+      deprecated: false
     headers:
       Authorization: 'Bearer {YOUR_AUTH_KEY}'
       Content-Type: application/json
       Accept: application/json
     urlParameters:
       id:
+        custom: []
         name: id
         description: 'The slug or id of the cryptocurrency.'
         required: true
@@ -184,7 +194,7 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
-        custom: []
+        deprecated: false
     cleanUrlParameters:
       id: bitcoin
     queryParameters: []
@@ -194,6 +204,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -201,8 +212,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -231,8 +242,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 401
         content: |-
           {
@@ -240,14 +251,14 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 404
         content: '{'
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 404
         content: |-
           {
@@ -255,7 +266,6 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth:
       - headers
@@ -264,12 +274,13 @@ endpoints:
     controller: null
     method: null
     route: null
-    custom: []
   -
+    custom: []
     httpMethods:
       - GET
     uri: 'api/cryptocurrencies/{id}/chart'
     metadata:
+      custom: []
       groupName: 'Cryptocurrency Management'
       groupDescription: |-
 
@@ -279,12 +290,13 @@ endpoints:
       title: 'Get price history for a cryptocurrency'
       description: ''
       authenticated: false
-      custom: []
+      deprecated: false
     headers:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
       id:
+        custom: []
         name: id
         description: 'The ID of the cryptocurrency.'
         required: true
@@ -293,7 +305,7 @@ endpoints:
         enumValues: []
         exampleWasSpecified: false
         nullable: false
-        custom: []
+        deprecated: false
     cleanUrlParameters:
       id: architecto
     queryParameters: []
@@ -303,6 +315,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -317,8 +330,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -333,18 +346,18 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth: []
     controller: null
     method: null
     route: null
-    custom: []
   -
+    custom: []
     httpMethods:
       - GET
     uri: 'api/cryptocurrencies/{id}/price-history'
     metadata:
+      custom: []
       groupName: 'Cryptocurrency Management'
       groupDescription: |-
 
@@ -354,12 +367,13 @@ endpoints:
       title: 'Get price history for a cryptocurrency'
       description: ''
       authenticated: false
-      custom: []
+      deprecated: false
     headers:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
       id:
+        custom: []
         name: id
         description: 'The ID of the cryptocurrency.'
         required: true
@@ -368,7 +382,7 @@ endpoints:
         enumValues: []
         exampleWasSpecified: false
         nullable: false
-        custom: []
+        deprecated: false
     cleanUrlParameters:
       id: architecto
     queryParameters: []
@@ -378,6 +392,7 @@ endpoints:
     fileParameters: []
     responses:
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -392,8 +407,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
       -
+        custom: []
         status: 200
         content: |-
           {
@@ -408,10 +423,8 @@ endpoints:
           }
         headers: []
         description: ''
-        custom: []
     responseFields: []
     auth: []
     controller: null
     method: null
     route: null
-    custom: []

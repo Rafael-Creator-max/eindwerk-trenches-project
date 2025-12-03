@@ -1,0 +1,710 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "https:\/\/backend.ddev.site"
+        }
+    ],
+    "info": {
+        "name": "Crypto Tracker API Documentation",
+        "_postman_id": "3e34e4b1-43ae-4442-8ca7-dd21055019db",
+        "description": "API documentation for the Crypto Tracker application. This API allows users to track cryptocurrency prices, follow\/unfollow cryptocurrencies, and get market data.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "description": "\nAPIs for user authentication and management",
+            "item": [
+                {
+                    "name": "Register a new user",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/register",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/register"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"John Doe\",\"email\":\"user@example.com\",\"password\":\"your-secure-password\",\"password_confirmation\":\"your-secure-password\"}"
+                        },
+                        "description": "Create a new user account with the provided information and send verification email.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n    \"message\": \"User registered successfully. Please check your email to verify your account.\",\n    \"user\": {\n        \"name\": \"John Doe\",\n        \"email\": \"user@example.com\",\n        \"email_verified_at\": null,\n        \"updated_at\": \"2023-01-01T12:00:00.000000Z\",\n        \"created_at\": \"2023-01-01T12:00:00.000000Z\",\n        \"id\": 1\n    },\n    \"requires_verification\": true\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"email\": [\"The email has already been taken.\"],\n        \"password\": [\"The password confirmation does not match.\"]\n    }\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Authenticate user and create token",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/login",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/login"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"user@example.com\",\"password\":\"your-secure-password\"}"
+                        },
+                        "description": "Authenticate a user with email and password to receive an access token.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n    \"access_token\": \"1|a1b2c3d4...\",\n    \"token_type\": \"Bearer\",\n    \"user\": {\n        \"id\": 1,\n        \"name\": \"John Doe\",\n        \"email\": \"user@example.com\",\n        \"email_verified_at\": \"2023-01-01T12:00:00.000000Z\",\n        \"created_at\": \"2023-01-01T12:00:00.000000Z\",\n        \"updated_at\": \"2023-01-01T12:00:00.000000Z\"\n    }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"The provided credentials are incorrect.\",\n    \"errors\": {\n        \"email\": [\"The provided credentials are incorrect.\"]\n    }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n    \"message\": \"The given data was invalid.\",\n    \"errors\": {\n        \"email\": [\"The email field is required.\"],\n        \"password\": [\"The password field is required.\"]\n    }\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Logout user (Revoke the token)",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/logout",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/logout"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Revoke the user's current authentication token."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n    \"message\": \"Successfully logged out\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Unauthenticated.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get authenticated user details",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/user",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/user"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the details of the currently authenticated user including email verification status."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n    \"id\": 1,\n    \"name\": \"John Doe\",\n    \"email\": \"user@example.com\",\n    \"email_verified_at\": \"2023-01-01T12:00:00.000000Z\",\n    \"created_at\": \"2023-01-01T12:00:00.000000Z\",\n    \"updated_at\": \"2023-01-01T12:00:00.000000Z\",\n    \"is_verified\": true\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Unauthenticated.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Resend the email verification notification.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/email\/verification-notification",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/email\/verification-notification"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n    \"message\": \"Verification link resent to your email address.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\n    \"message\": \"Email already verified.\",\n    \"is_verified\": true\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Unauthenticated.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Cryptocurrency Management",
+            "description": "\nAPIs for managing cryptocurrencies and user interactions with them",
+            "item": [
+                {
+                    "name": "Get List of All Cryptocurrencies",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/cryptocurrencies",
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "The page number to return.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Number of items per page. Default: 15.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "vs_currency",
+                                    "value": "eur",
+                                    "description": "The target currency of market data. Default: usd.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "order",
+                                    "value": "volume_desc",
+                                    "description": "The field to order by. Default: market_cap_desc.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sparkline",
+                                    "value": "1",
+                                    "description": "Include sparkline 7d data. Default: false.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "price_change_percentage",
+                                    "value": "1h%2C24h%2C7d",
+                                    "description": "Include price change percentage. Comma-separated values.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/cryptocurrencies?page=1&per_page=20&vs_currency=eur&order=volume_desc&sparkline=1&price_change_percentage=1h%2C24h%2C7d"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns a paginated list of all cryptocurrencies with their current market data.\nResults are ordered by market cap (descending) and cached for 5 minutes to improve performance.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"asset_type_id\": 1,\n      \"symbol\": \"BTC\",\n      \"name\": \"Bitcoin\",\n      \"slug\": \"bitcoin\",\n      \"external_id\": \"bitcoin\",\n      \"current_price\": 50000.00,\n      \"market_cap\": 1000000000000.00,\n      \"market_cap_rank\": 1,\n      \"total_volume\": 50000000000.00,\n      \"high_24h\": 51000.00,\n      \"low_24h\": 49000.00,\n      \"price_change_24h\": 1000.00,\n      \"price_change_percentage_24h\": 2.04,\n      \"market_cap_change_24h\": 20000000000.00,\n      \"market_cap_change_percentage_24h\": 2.04,\n      \"circulating_supply\": 18796831.0,\n      \"total_supply\": 21000000.0,\n      \"max_supply\": 21000000.0,\n      \"ath\": 69045.00,\n      \"ath_change_percentage\": -27.59,\n      \"ath_date\": \"2021-11-10T14:24:11.849Z\",\n      \"atl\": 67.81,\n      \"atl_change_percentage\": 73630.19,\n      \"atl_date\": \"2013-07-06T00:00:00.000Z\",\n      \"last_updated\": \"2023-01-01T12:00:00.000Z\",\n      \"price_change_percentage_1h_in_currency\": 0.1,\n      \"price_change_percentage_24h_in_currency\": 2.04,\n      \"price_change_percentage_7d_in_currency\": -5.24,\n      \"image\": \"https:\/\/assets.coingecko.com\/coins\/images\/1\/large\/bitcoin.png\",\n      \"roi\": null,\n      \"sparkline_in_7d\": {\n        \"price\": [\n          50000.00, 50200.00, 50100.00, 50300.00, 50400.00\n        ]\n      }\n      \"price_change_24h\": \"2.50000000\",\n      \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n      \"updated_at\": \"2023-01-01T00:00:00.000000Z\"\n    },\n    ...\n  ]\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Unfollow a Cryptocurrency",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/cryptocurrencies\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/cryptocurrencies\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "bitcoin",
+                                    "description": "The slug or id of the cryptocurrency."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Allows the authenticated user to unfollow a specific cryptocurrency.\nRequires authentication via Bearer token."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Successfully unfollowed cryptocurrency\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"asset_type_id\": 1,\n    \"symbol\": \"BTC\",\n    \"name\": \"Bitcoin\",\n    \"slug\": \"bitcoin\",\n    \"external_id\": \"bitcoin\",\n    \"current_price\": \"50000.00000000\",\n    \"market_cap\": \"1000000000000.00\",\n    \"volume_24h\": \"50000000000.00\",\n    \"price_change_24h\": \"2.50000000\",\n    \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n    \"updated_at\": \"2023-01-01T00:00:00.000000Z\",\n    \"asset_type\": {\n      \"id\": 1,\n      \"name\": \"Cryptocurrency\",\n      \"description\": \"Digital or virtual currency that uses cryptography for security\",\n      \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n      \"updated_at\": \"2023-01-01T00:00:00.000000Z\"\n    },\n    \"followers\": []\n  }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n  \"message\": \"Cryptocurrency not found\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get price history for a cryptocurrency",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/cryptocurrencies\/:id\/chart",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/cryptocurrencies\/:id\/chart",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "architecto",
+                                    "description": "The ID of the cryptocurrency."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"prices\": [[timestamp, price], ...],\n    \"market_caps\": [[timestamp, market_cap], ...],\n    \"total_volumes\": [[timestamp, volume], ...]\n  },\n  \"crypto_id\": 1,\n  \"symbol\": \"BTC\",\n  \"name\": \"Bitcoin\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"prices\": [],\n    \"market_caps\": [],\n    \"total_volumes\": []\n  },\n  \"message\": \"No price data available\",\n  \"crypto_id\": 1,\n  \"symbol\": \"BTC\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get price history for a cryptocurrency",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/cryptocurrencies\/:id\/price-history",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/cryptocurrencies\/:id\/price-history",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "architecto",
+                                    "description": "The ID of the cryptocurrency."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"prices\": [[timestamp, price], ...],\n    \"market_caps\": [[timestamp, market_cap], ...],\n    \"total_volumes\": [[timestamp, volume], ...]\n  },\n  \"crypto_id\": 1,\n  \"symbol\": \"BTC\",\n  \"name\": \"Bitcoin\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"prices\": [],\n    \"market_caps\": [],\n    \"total_volumes\": []\n  },\n  \"message\": \"No price data available\",\n  \"crypto_id\": 1,\n  \"symbol\": \"BTC\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Endpoints",
+            "description": "",
+            "item": [
+                {
+                    "name": "Send password reset link",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/forgot-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/forgot-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"gbailey@example.net\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset password",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/reset-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/reset-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"token\":\"architecto\",\"email\":\"zbailey@example.net\",\"password\":\"-0pBNvYgxw\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "User Actions",
+            "description": "",
+            "item": [
+                {
+                    "name": "Follow a Cryptocurrency",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/cryptocurrencies\/:id\/follow",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/cryptocurrencies\/:id\/follow",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "architecto",
+                                    "description": "The ID of the cryptocurrency."
+                                },
+                                {
+                                    "id": "cryptocurrency",
+                                    "key": "cryptocurrency",
+                                    "value": "bitcoin",
+                                    "description": "The slug of the cryptocurrency to follow."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Allows the authenticated user to follow a specific cryptocurrency.\nRequires authentication via Bearer token."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Successfully followed cryptocurrency\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Cryptocurrency]\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Unfollow a Cryptocurrency",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/cryptocurrencies\/:id\/follow",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/cryptocurrencies\/:id\/follow",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "bitcoin",
+                                    "description": "The slug or id of the cryptocurrency to unfollow."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Allows the authenticated user to unfollow a specific cryptocurrency.\nRequires authentication via Bearer token."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Successfully unfollowed cryptocurrency\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Cryptocurrency]\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get User's Followed Cryptocurrencies",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/user\/cryptocurrencies",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/user\/cryptocurrencies"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns a list of all cryptocurrencies that the authenticated user is following.\nRequires authentication via Bearer token."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "[\n  {\n    \"id\": 1,\n    \"asset_type_id\": 1,\n    \"symbol\": \"BTC\",\n    \"name\": \"Bitcoin\",\n    \"slug\": \"bitcoin\",\n    \"external_id\": \"bitcoin\",\n    \"current_price\": \"50000.00000000\",\n    \"market_cap\": \"1000000000000.00\",\n    \"volume_24h\": \"50000000000.00\",\n    \"price_change_24h\": \"2.50000000\",\n    \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n    \"updated_at\": \"2023-01-01T00:00:00.000000Z\",\n    \"pivot\": {\n      \"user_id\": 1,\n      \"cryptocurrency_id\": 1\n    },\n    \"asset_type\": {\n      \"id\": 1,\n      \"name\": \"Cryptocurrency\",\n      \"description\": \"Digital or virtual currency that uses cryptography for security\",\n      \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n      \"updated_at\": \"2023-01-01T00:00:00.000000Z\"\n    }\n  }\n]",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\n  \"message\": \"Unauthenticated.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "key",
+                "type": "string"
+            }
+        ]
+    }
+}
