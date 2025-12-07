@@ -171,14 +171,11 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Unfollow a Cryptocurrency'
-      description: |-
-        Allows the authenticated user to unfollow a specific cryptocurrency.
-        Requires authentication via Bearer token.
-      authenticated: true
+      title: 'Get Cryptocurrency Details'
+      description: 'Returns detailed information about a specific cryptocurrency by its slug or id.'
+      authenticated: false
       deprecated: false
     headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
       Content-Type: application/json
       Accept: application/json
     urlParameters:
@@ -206,53 +203,14 @@ endpoints:
         status: 200
         content: |-
           {
-            "message": "Successfully unfollowed cryptocurrency"
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
             "data": {
               "id": 1,
-              "asset_type_id": 1,
               "symbol": "BTC",
               "name": "Bitcoin",
               "slug": "bitcoin",
-              "external_id": "bitcoin",
-              "current_price": "50000.00000000",
-              "market_cap": "1000000000000.00",
-              "volume_24h": "50000000000.00",
-              "price_change_24h": "2.50000000",
-              "created_at": "2023-01-01T00:00:00.000000Z",
-              "updated_at": "2023-01-01T00:00:00.000000Z",
-              "asset_type": {
-                "id": 1,
-                "name": "Cryptocurrency",
-                "description": "Digital or virtual currency that uses cryptography for security",
-                "created_at": "2023-01-01T00:00:00.000000Z",
-                "updated_at": "2023-01-01T00:00:00.000000Z"
-              },
-              "followers": []
+              "external_id": "bitcoin"
             }
           }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 401
-        content: |-
-          {
-            "message": "Unauthenticated."
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 404
-        content: '{'
         headers: []
         description: ''
       -
@@ -265,10 +223,7 @@ endpoints:
         headers: []
         description: ''
     responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    auth: []
     controller: null
     method: null
     route: null

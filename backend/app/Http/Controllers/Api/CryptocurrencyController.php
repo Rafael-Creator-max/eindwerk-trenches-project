@@ -244,47 +244,19 @@ class CryptocurrencyController extends Controller
     }
 
     /**
-     * Unfollow a Cryptocurrency
+     * Get Cryptocurrency Details
      *
-     * Allows the authenticated user to unfollow a specific cryptocurrency.
-     * Requires authentication via Bearer token.
+     * Returns detailed information about a specific cryptocurrency by its slug or id.
      *
-     * @authenticated
-     * @urlParam id string required The slug or id of the cryptocurrency to unfollow. Example: bitcoin
-     *
-     * @response 200 {
-     *   "message": "Successfully unfollowed cryptocurrency"
-     * }
-     *
-     * @response 401 {
-     *   "message": "Unauthenticated."
-     * }
-     *
-     * @response 404 {
      * @urlParam id string required The slug or id of the cryptocurrency. Example: bitcoin
      *
      * @response 200 {
      *   "data": {
      *     "id": 1,
-     *     "asset_type_id": 1,
      *     "symbol": "BTC",
      *     "name": "Bitcoin",
      *     "slug": "bitcoin",
-     *     "external_id": "bitcoin",
-     *     "current_price": "50000.00000000",
-     *     "market_cap": "1000000000000.00",
-     *     "volume_24h": "50000000000.00",
-     *     "price_change_24h": "2.50000000",
-     *     "created_at": "2023-01-01T00:00:00.000000Z",
-     *     "updated_at": "2023-01-01T00:00:00.000000Z",
-     *     "asset_type": {
-     *       "id": 1,
-     *       "name": "Cryptocurrency",
-     *       "description": "Digital or virtual currency that uses cryptography for security",
-     *       "created_at": "2023-01-01T00:00:00.000000Z",
-     *       "updated_at": "2023-01-01T00:00:00.000000Z"
-     *     },
-     *     "followers": []
+     *     "external_id": "bitcoin"
      *   }
      * }
      *

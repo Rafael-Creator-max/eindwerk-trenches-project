@@ -8,7 +8,7 @@ Welcome to the Cryptocurrency Tracker API documentation. This API provides real-
 - **Historical Price Data**: Access historical price data with various time intervals.
 - **User Authentication**: Secure user registration and authentication using Laravel Sanctum.
 - **Portfolio Management**: Users can track their favorite cryptocurrencies.
-- **Trending Cryptocurrencies**: Discover trending cryptocurrencies based on market data.
+
 
 ## Authentication
 
@@ -20,15 +20,14 @@ Authorization: Bearer {your-api-token}
 
 ## Rate Limiting
 
-- **Public Endpoints**: 60 requests per minute
-- **Authenticated Endpoints**: 120 requests per minute
+Rate limits may apply depending on server configuration.
 
 ## Base URL
 
-All API endpoints are relative to the base URL:
+All API endpoints are relative to your backend base URL (Laravel `APP_URL`). For example:
 
 ```
-https://api.yourdomain.com/v1
+http://127.0.0.1:8000
 ```
 
 ## Response Format

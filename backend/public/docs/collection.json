@@ -5,12 +5,12 @@
             "key": "baseUrl",
             "type": "string",
             "name": "string",
-            "value": "https:\/\/eindwerk-trenches-project-production.up.railway.app"
+            "value": "https:\/\/backend.ddev.site"
         }
     ],
     "info": {
         "name": "Crypto Tracker API Documentation",
-        "_postman_id": "b8757a15-068a-4918-aac5-a52d4256d58b",
+        "_postman_id": "b097b37a-d7cf-4c86-96fa-0a07c8f49179",
         "description": "API documentation for the Crypto Tracker application. This API allows users to track cryptocurrency prices, follow\/unfollow cryptocurrencies, and get market data.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -188,50 +188,6 @@
                             "name": ""
                         }
                     ]
-                },
-                {
-                    "name": "Resend the email verification notification.",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/email\/verification-notification",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/email\/verification-notification"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": null,
-                        "description": ""
-                    },
-                    "response": [
-                        {
-                            "header": [],
-                            "code": 200,
-                            "body": "{\n    \"message\": \"Verification link resent to your email address.\"\n}",
-                            "name": ""
-                        },
-                        {
-                            "header": [],
-                            "code": 400,
-                            "body": "{\n    \"message\": \"Email already verified.\",\n    \"is_verified\": true\n}",
-                            "name": ""
-                        },
-                        {
-                            "header": [],
-                            "code": 401,
-                            "body": "{\n    \"message\": \"Unauthenticated.\"\n}",
-                            "name": ""
-                        }
-                    ]
                 }
             ]
         },
@@ -312,7 +268,7 @@
                     ]
                 },
                 {
-                    "name": "Unfollow a Cryptocurrency",
+                    "name": "Get Cryptocurrency Details",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
@@ -340,31 +296,16 @@
                             }
                         ],
                         "body": null,
-                        "description": "Allows the authenticated user to unfollow a specific cryptocurrency.\nRequires authentication via Bearer token."
+                        "description": "Returns detailed information about a specific cryptocurrency by its slug or id.",
+                        "auth": {
+                            "type": "noauth"
+                        }
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"message\": \"Successfully unfollowed cryptocurrency\"\n}",
-                            "name": ""
-                        },
-                        {
-                            "header": [],
-                            "code": 200,
-                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"asset_type_id\": 1,\n    \"symbol\": \"BTC\",\n    \"name\": \"Bitcoin\",\n    \"slug\": \"bitcoin\",\n    \"external_id\": \"bitcoin\",\n    \"current_price\": \"50000.00000000\",\n    \"market_cap\": \"1000000000000.00\",\n    \"volume_24h\": \"50000000000.00\",\n    \"price_change_24h\": \"2.50000000\",\n    \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n    \"updated_at\": \"2023-01-01T00:00:00.000000Z\",\n    \"asset_type\": {\n      \"id\": 1,\n      \"name\": \"Cryptocurrency\",\n      \"description\": \"Digital or virtual currency that uses cryptography for security\",\n      \"created_at\": \"2023-01-01T00:00:00.000000Z\",\n      \"updated_at\": \"2023-01-01T00:00:00.000000Z\"\n    },\n    \"followers\": []\n  }\n}",
-                            "name": ""
-                        },
-                        {
-                            "header": [],
-                            "code": 401,
-                            "body": "{\n  \"message\": \"Unauthenticated.\"\n}",
-                            "name": ""
-                        },
-                        {
-                            "header": [],
-                            "code": 404,
-                            "body": "{",
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"symbol\": \"BTC\",\n    \"name\": \"Bitcoin\",\n    \"slug\": \"bitcoin\",\n    \"external_id\": \"bitcoin\"\n  }\n}",
                             "name": ""
                         },
                         {
@@ -702,7 +643,7 @@
         "type": "bearer",
         "bearer": [
             {
-                "key": "key",
+                "key": "Authorization",
                 "type": "string"
             }
         ]

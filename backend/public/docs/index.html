@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "https://eindwerk-trenches-project-production.up.railway.app";
+        var tryItOutBaseUrl = "https://backend.ddev.site";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -83,9 +83,6 @@
                                                                                 <li class="tocify-item level-2" data-unique="authentication-GETapi-user">
                                 <a href="#authentication-GETapi-user">Get authenticated user details</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="authentication-POSTapi-email-verification-notification">
-                                <a href="#authentication-POSTapi-email-verification-notification">Resend the email verification notification.</a>
-                            </li>
                                                                         </ul>
                             </ul>
                     <ul id="tocify-header-cryptocurrency-management" class="tocify-header">
@@ -97,7 +94,7 @@
                                 <a href="#cryptocurrency-management-GETapi-cryptocurrencies">Get List of All Cryptocurrencies</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="cryptocurrency-management-GETapi-cryptocurrencies--id-">
-                                <a href="#cryptocurrency-management-GETapi-cryptocurrencies--id-">Unfollow a Cryptocurrency</a>
+                                <a href="#cryptocurrency-management-GETapi-cryptocurrencies--id-">Get Cryptocurrency Details</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="cryptocurrency-management-GETapi-cryptocurrencies--id--chart">
                                 <a href="#cryptocurrency-management-GETapi-cryptocurrencies--id--chart">Get price history for a cryptocurrency</a>
@@ -145,7 +142,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: December 3, 2025</li>
+        <li>Last updated: December 7, 2025</li>
     </ul>
 </div>
 
@@ -155,7 +152,7 @@
         <h1 id="introduction">Introduction</h1>
 <p>API documentation for the Crypto Tracker application. This API allows users to track cryptocurrency prices, follow/unfollow cryptocurrencies, and get market data.</p>
 <aside>
-    <strong>Base URL</strong>: <code>https://eindwerk-trenches-project-production.up.railway.app</code>
+    <strong>Base URL</strong>: <code>https://backend.ddev.site</code>
 </aside>
 <pre><code>This documentation aims to provide all the information you need to work with our API.
 
@@ -163,9 +160,9 @@
 You can switch the language used with the tabs at the top right (or from the nav menu at the top left on mobile).&lt;/aside&gt;</code></pre>
 
         <h1 id="authenticating-requests">Authenticating requests</h1>
-<p>To authenticate requests, include an <strong><code>Authorization</code></strong> header with the value <strong><code>"Bearer {YOUR_AUTH_KEY}"</code></strong>.</p>
+<p>To authenticate requests, include an <strong><code>Authorization</code></strong> header with the value <strong><code>"Bearer {YOUR_AUTH_TOKEN}"</code></strong>.</p>
 <p>All authenticated endpoints are marked with a <code>requires authentication</code> badge in the documentation below.</p>
-<p>You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.</p>
+<p>Log in to obtain a token, then send it as <code>Authorization: Bearer {token}</code>.</p>
 
         <h1 id="authentication">Authentication</h1>
 
@@ -184,7 +181,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/register" \
+    "https://backend.ddev.site/api/register" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -198,7 +195,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/register"
+    "https://backend.ddev.site/api/register"
 );
 
 const headers = {
@@ -387,7 +384,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/login" \
+    "https://backend.ddev.site/api/login" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -399,7 +396,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/login"
+    "https://backend.ddev.site/api/login"
 );
 
 const headers = {
@@ -579,7 +576,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/logout" \
+    "https://backend.ddev.site/api/logout" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -587,7 +584,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/logout"
+    "https://backend.ddev.site/api/logout"
 );
 
 const headers = {
@@ -719,7 +716,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://eindwerk-trenches-project-production.up.railway.app/api/user" \
+    --get "https://backend.ddev.site/api/user" \
     --header "Authorization: Bearer {token}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -727,7 +724,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/user"
+    "https://backend.ddev.site/api/user"
 );
 
 const headers = {
@@ -851,156 +848,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="authentication-POSTapi-email-verification-notification">Resend the email verification notification.</h2>
-
-<p>
-<small class="badge badge-darkred">requires authentication</small>
-</p>
-
-
-
-<span id="example-requests-POSTapi-email-verification-notification">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request POST \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/email/verification-notification" \
-    --header "Authorization: Bearer {token}" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/email/verification-notification"
-);
-
-const headers = {
-    "Authorization": "Bearer {token}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-fetch(url, {
-    method: "POST",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-</span>
-
-<span id="example-responses-POSTapi-email-verification-notification">
-            <blockquote>
-            <p>Example response (200):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;Verification link resent to your email address.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (400):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;Email already verified.&quot;,
-    &quot;is_verified&quot;: true
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (401):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;Unauthenticated.&quot;
-}</code>
- </pre>
-    </span>
-<span id="execution-results-POSTapi-email-verification-notification" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-POSTapi-email-verification-notification"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-email-verification-notification"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-POSTapi-email-verification-notification" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-email-verification-notification">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-POSTapi-email-verification-notification" data-method="POST"
-      data-path="api/email/verification-notification"
-      data-authed="1"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-email-verification-notification', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-email-verification-notification"
-                    onclick="tryItOut('POSTapi-email-verification-notification');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-email-verification-notification"
-                    onclick="cancelTryOut('POSTapi-email-verification-notification');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-email-verification-notification"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-black">POST</small>
-            <b><code>api/email/verification-notification</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-email-verification-notification"
-               value="Bearer {token}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer {token}</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-email-verification-notification"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-email-verification-notification"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        </form>
-
                 <h1 id="cryptocurrency-management">Cryptocurrency Management</h1>
 
     <p>APIs for managing cryptocurrencies and user interactions with them</p>
@@ -1019,14 +866,14 @@ Results are ordered by market cap (descending) and cached for 5 minutes to impro
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies?page=1&amp;per_page=20&amp;vs_currency=eur&amp;order=volume_desc&amp;sparkline=1&amp;price_change_percentage=1h%2C24h%2C7d" \
+    --get "https://backend.ddev.site/api/cryptocurrencies?page=1&amp;per_page=20&amp;vs_currency=eur&amp;order=volume_desc&amp;sparkline=1&amp;price_change_percentage=1h%2C24h%2C7d" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies"
+    "https://backend.ddev.site/api/cryptocurrencies"
 );
 
 const params = {
@@ -1254,14 +1101,12 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
-                    <h2 id="cryptocurrency-management-GETapi-cryptocurrencies--id-">Unfollow a Cryptocurrency</h2>
+                    <h2 id="cryptocurrency-management-GETapi-cryptocurrencies--id-">Get Cryptocurrency Details</h2>
 
 <p>
-<small class="badge badge-darkred">requires authentication</small>
 </p>
 
-<p>Allows the authenticated user to unfollow a specific cryptocurrency.
-Requires authentication via Bearer token.</p>
+<p>Returns detailed information about a specific cryptocurrency by its slug or id.</p>
 
 <span id="example-requests-GETapi-cryptocurrencies--id-">
 <blockquote>Example request:</blockquote>
@@ -1269,19 +1114,17 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin" \
-    --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
+    --get "https://backend.ddev.site/api/cryptocurrencies/bitcoin" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin"
+    "https://backend.ddev.site/api/cryptocurrencies/bitcoin"
 );
 
 const headers = {
-    "Authorization": "Bearer {YOUR_AUTH_KEY}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -1300,54 +1143,14 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;Successfully unfollowed cryptocurrency&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (200):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
     &quot;data&quot;: {
         &quot;id&quot;: 1,
-        &quot;asset_type_id&quot;: 1,
         &quot;symbol&quot;: &quot;BTC&quot;,
         &quot;name&quot;: &quot;Bitcoin&quot;,
         &quot;slug&quot;: &quot;bitcoin&quot;,
-        &quot;external_id&quot;: &quot;bitcoin&quot;,
-        &quot;current_price&quot;: &quot;50000.00000000&quot;,
-        &quot;market_cap&quot;: &quot;1000000000000.00&quot;,
-        &quot;volume_24h&quot;: &quot;50000000000.00&quot;,
-        &quot;price_change_24h&quot;: &quot;2.50000000&quot;,
-        &quot;created_at&quot;: &quot;2023-01-01T00:00:00.000000Z&quot;,
-        &quot;updated_at&quot;: &quot;2023-01-01T00:00:00.000000Z&quot;,
-        &quot;asset_type&quot;: {
-            &quot;id&quot;: 1,
-            &quot;name&quot;: &quot;Cryptocurrency&quot;,
-            &quot;description&quot;: &quot;Digital or virtual currency that uses cryptography for security&quot;,
-            &quot;created_at&quot;: &quot;2023-01-01T00:00:00.000000Z&quot;,
-            &quot;updated_at&quot;: &quot;2023-01-01T00:00:00.000000Z&quot;
-        },
-        &quot;followers&quot;: []
+        &quot;external_id&quot;: &quot;bitcoin&quot;
     }
 }</code>
- </pre>
-            <blockquote>
-            <p>Example response (401):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;Unauthenticated.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{</code>
  </pre>
             <blockquote>
             <p>Example response (404):</p>
@@ -1376,7 +1179,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 </span>
 <form id="form-GETapi-cryptocurrencies--id-" data-method="GET"
       data-path="api/cryptocurrencies/{id}"
-      data-authed="1"
+      data-authed="0"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
@@ -1406,17 +1209,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/cryptocurrencies/{id}</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="GETapi-cryptocurrencies--id-"
-               value="Bearer {YOUR_AUTH_KEY}"
-               data-component="header">
-    <br>
-<p>Example: <code>Bearer {YOUR_AUTH_KEY}</code></p>
-            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -1466,14 +1258,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/chart" \
+    --get "https://backend.ddev.site/api/cryptocurrencies/architecto/chart" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/chart"
+    "https://backend.ddev.site/api/cryptocurrencies/architecto/chart"
 );
 
 const headers = {
@@ -1618,14 +1410,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/price-history" \
+    --get "https://backend.ddev.site/api/cryptocurrencies/architecto/price-history" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/price-history"
+    "https://backend.ddev.site/api/cryptocurrencies/architecto/price-history"
 );
 
 const headers = {
@@ -1774,7 +1566,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/forgot-password" \
+    "https://backend.ddev.site/api/forgot-password" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1785,7 +1577,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/forgot-password"
+    "https://backend.ddev.site/api/forgot-password"
 );
 
 const headers = {
@@ -1903,7 +1695,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/reset-password" \
+    "https://backend.ddev.site/api/reset-password" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1916,7 +1708,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/reset-password"
+    "https://backend.ddev.site/api/reset-password"
 );
 
 const headers = {
@@ -2064,19 +1856,19 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/follow" \
-    --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
+    "https://backend.ddev.site/api/cryptocurrencies/architecto/follow" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/architecto/follow"
+    "https://backend.ddev.site/api/cryptocurrencies/architecto/follow"
 );
 
 const headers = {
-    "Authorization": "Bearer {YOUR_AUTH_KEY}",
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -2170,10 +1962,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="Authorization" class="auth-value"               data-endpoint="POSTapi-cryptocurrencies--id--follow"
-               value="Bearer {YOUR_AUTH_KEY}"
+               value="Bearer {YOUR_AUTH_TOKEN}"
                data-component="header">
     <br>
-<p>Example: <code>Bearer {YOUR_AUTH_KEY}</code></p>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
             </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
@@ -2237,19 +2029,19 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin/follow" \
-    --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
+    "https://backend.ddev.site/api/cryptocurrencies/bitcoin/follow" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/cryptocurrencies/bitcoin/follow"
+    "https://backend.ddev.site/api/cryptocurrencies/bitcoin/follow"
 );
 
 const headers = {
-    "Authorization": "Bearer {YOUR_AUTH_KEY}",
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -2343,10 +2135,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="Authorization" class="auth-value"               data-endpoint="DELETEapi-cryptocurrencies--id--follow"
-               value="Bearer {YOUR_AUTH_KEY}"
+               value="Bearer {YOUR_AUTH_TOKEN}"
                data-component="header">
     <br>
-<p>Example: <code>Bearer {YOUR_AUTH_KEY}</code></p>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
             </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
@@ -2399,19 +2191,19 @@ Requires authentication via Bearer token.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://eindwerk-trenches-project-production.up.railway.app/api/user/cryptocurrencies" \
-    --header "Authorization: Bearer {YOUR_AUTH_KEY}" \
+    --get "https://backend.ddev.site/api/user/cryptocurrencies" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://eindwerk-trenches-project-production.up.railway.app/api/user/cryptocurrencies"
+    "https://backend.ddev.site/api/user/cryptocurrencies"
 );
 
 const headers = {
-    "Authorization": "Bearer {YOUR_AUTH_KEY}",
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -2520,10 +2312,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="Authorization" class="auth-value"               data-endpoint="GETapi-user-cryptocurrencies"
-               value="Bearer {YOUR_AUTH_KEY}"
+               value="Bearer {YOUR_AUTH_TOKEN}"
                data-component="header">
     <br>
-<p>Example: <code>Bearer {YOUR_AUTH_KEY}</code></p>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
             </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;

@@ -7,6 +7,38 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Crypto Tracker Backend — Quick Start & API Docs
+
+### Requirements
+- PHP 8.3+
+- Composer
+- SQLite/MySQL (configured via `.env`)
+
+### Setup
+- `composer install`
+- copy `.env.example` to `.env`, set `APP_URL` and `FRONTEND_URL`
+- `php artisan key:generate`
+- configure DB in `.env`, then run `php artisan migrate --force`
+
+### Run locally
+- `php artisan serve` (default http://127.0.0.1:8000)
+
+### Authentication (Sanctum)
+- Register: `POST /api/register` → verify email via link
+- Login: `POST /api/login` → receive token
+- Use token on subsequent requests as `Authorization: Bearer {token}`
+
+### API documentation
+- Generated static docs: `public/docs/index.html` (or deployed at `/docs` if served)
+- Regenerate: `php artisan scribe:generate` (recommended to run locally only)
+- Postman collection: `public/docs/collection.json`
+- OpenAPI spec: `public/docs/openapi.yaml`
+
+### Notes
+- Dev-only routes like `/run-scribe`, `/run-migrate`, `/run-seed` should be used locally. Avoid exposing them publicly on production.
+
+---
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

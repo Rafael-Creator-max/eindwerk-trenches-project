@@ -314,6 +314,8 @@ class TokenAuthController extends Controller
     /**
      * Resend the email verification notification.
      *
+     * @hideFromAPIDocumentation
+     *
      * @authenticated
      * @header Authorization Bearer {token}
      * 
