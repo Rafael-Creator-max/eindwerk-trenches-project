@@ -47,6 +47,7 @@ export default function CryptocurrencyDetailPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await api.get(`/api/cryptocurrencies/${slug}`);
       const cryptoData = response.data.data;
       
@@ -58,7 +59,6 @@ export default function CryptocurrencyDetailPage() {
         setPriceChange24h(parseFloat(cryptoData.price_change_24h));
       }
       
-      await fetchPriceHistory(timeRange);
     } catch (err) {
       setError('Failed to fetch cryptocurrency details');
       console.error('Error fetching data:', err);
@@ -75,7 +75,7 @@ export default function CryptocurrencyDetailPage() {
       const fetchPriceHistory = async (days = 7) => {
         try {
           console.log(`[${new Date().toISOString()}] Fetching price history for ${slug} (${days} days)`);
-          setLoading(true);
+          setLoadingChart(true);
           
           // Use a dedicated API client with a longer timeout for price history
           const priceHistoryApi = createApiWithTimeout(30000); // 30 second timeout for price history
@@ -188,7 +188,7 @@ export default function CryptocurrencyDetailPage() {
           // If we have cached data, we might want to show it here
           // or implement a retry mechanism
         } finally {
-          setLoading(false);
+          setLoadingChart(false);
         }
       };
       await fetchPriceHistory(Number(days));
@@ -206,7 +206,6 @@ export default function CryptocurrencyDetailPage() {
         }
       });
       
-      setError(errorMessage);
       setPriceData([]);
     } finally {
       setLoadingChart(false);
@@ -220,15 +219,12 @@ export default function CryptocurrencyDetailPage() {
   }, [slug]);
 
   useEffect(() => {
-    if (slug) {
-      // Refresh both the price history and the main data when time range changes
-      const refreshData = async () => {
-        await fetchData();
-        await fetchPriceHistory(timeRange);
-      };
-      refreshData();
-    }
-  }, [timeRange]);
+    if (!slug) return;
+    const refreshData = async () => {
+      await fetchPriceHistory(timeRange);
+    };
+    refreshData();
+  }, [timeRange, slug]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -283,7 +279,7 @@ export default function CryptocurrencyDetailPage() {
     );
   }
 
-  if (error || !crypto) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar />
@@ -303,9 +299,7 @@ export default function CryptocurrencyDetailPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {error || 'Cryptocurrency not found'}
-                </p>
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
             </div>
           </div>

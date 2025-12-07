@@ -65,17 +65,11 @@ export default function CryptocurrenciesPage() {
         setCryptos(updatedCryptos);
         
         // Fetch price history for each crypto to calculate accurate 24h change
+        const mappedChanges: Record<number, number> = {};
         updatedCryptos.forEach((crypto: any) => {
-          if (crypto.external_id) {
-            fetchPriceHistory(crypto.id, crypto.external_id);
-          } else {
-            // Fallback to using the provided price_change_24h if external_id is not available
-            setPriceChanges(prev => ({
-              ...prev,
-              [crypto.id]: Number(crypto.price_change_24h) || 0
-            }));
-          }
+          mappedChanges[crypto.id] = Number(crypto.price_change_24h) || 0;
         });
+        setPriceChanges(mappedChanges);
         
         const now = new Date();
         setLastUpdated(now.toLocaleTimeString('en-US', {
@@ -181,6 +175,11 @@ export default function CryptocurrenciesPage() {
         params: { _t: new Date().getTime() } // Prevent caching
       });
       setCryptos(response.data);
+      const changes: Record<number, number> = {};
+      response.data.forEach((crypto: any) => {
+        changes[crypto.id] = Number(crypto.price_change_24h) || 0;
+      });
+      setPriceChanges(changes);
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString('en-US', {
         hour: '2-digit',

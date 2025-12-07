@@ -3,20 +3,27 @@ import axios, { InternalAxiosRequestConfig } from 'axios';
 // Debug log environment variables
 console.log('Environment:', {
   NODE_ENV: process.env.NODE_ENV,
-  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
   NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV
 });
 
 // Determine the base URL
 const getBaseUrl = () => {
-  // In development, use the local Laravel backend
-  if (process.env.NODE_ENV !== 'production') {
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  // Prefer explicitly provided public backend URLs
+  const envUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl) {
+    // Remove any trailing slashes for consistency
+    return envUrl.replace(/\/+$/, '');
   }
-  
-  // In production, use the production API URL without the /api prefix
-  // as we'll handle it in the request interceptor
-  return process.env.NEXT_PUBLIC_API_URL || '';
+
+  // Fallbacks
+  if (process.env.NODE_ENV !== 'production') {
+    // Local Laravel default when no env var is provided in development
+    return 'http://localhost:8000';
+  }
+  // In production, if no env is set, leave empty to surface misconfiguration clearly
+  return '';
 };
 
 const baseURL = getBaseUrl();

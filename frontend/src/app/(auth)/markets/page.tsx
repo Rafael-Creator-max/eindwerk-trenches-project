@@ -24,22 +24,28 @@ export default function MarketsPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    const mapBackendCryptoToCoin = (crypto: any): Coin => ({
+      id: (crypto.id ?? '').toString(),
+      symbol: crypto.symbol,
+      name: crypto.name,
+      image:
+        crypto.image_url ||
+        (crypto.symbol ? `https://cryptoicons.org/api/icon/${crypto.symbol.toLowerCase()}/200` : ''),
+      current_price: Number(crypto.current_price) || 0,
+      price_change_percentage_24h: Number(crypto.price_change_24h) || 0,
+      market_cap: Number(crypto.market_cap) || 0,
+      total_volume: Number(crypto.volume_24h) || 0,
+    });
+
     const fetchCoins = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(
-          'https://api.coingecko.com/api/v3/coins/markets',
-          {
-            params: {
-              vs_currency: 'usd',
-              order: 'market_cap_desc',
-              per_page: 50,
-              page: 1,
-              sparkline: false,
-            },
-          }
-        );
-        setCoins(response.data);
+        const response = await api.get('/cryptocurrencies', {
+          params: { _t: new Date().getTime() },
+        });
+        const backendList = Array.isArray(response.data) ? response.data : [];
+        const mapped = backendList.map(mapBackendCryptoToCoin);
+        setCoins(mapped.slice(0, 50));
       } catch (err) {
         console.error('Error fetching coins:', err);
         setError('Failed to fetch cryptocurrency data');
