@@ -17,6 +17,8 @@ class PasswordResetController extends Controller
 {
     /**
      * Send password reset link
+     *
+     * @hideFromAPIDocumentation
      */
     public function sendResetLinkEmail(Request $request)
     {
@@ -33,6 +35,8 @@ class PasswordResetController extends Controller
 
     /**
      * Reset password
+     *
+     * @hideFromAPIDocumentation
      */
     public function reset(Request $request)
     {
