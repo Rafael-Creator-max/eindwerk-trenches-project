@@ -1,22 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+  // swcMinify: true,
   async rewrites() {
     return [
       // Rewrite API requests to the DDEV backend
       {
-        source: '/api/:path*',
+        source: "/api/:path*",
         destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
       },
       // Rewrite Sanctum endpoints
       {
-        source: '/sanctum/:path*',
+        source: "/sanctum/:path*",
         destination: `${process.env.NEXT_PUBLIC_API_URL}/sanctum/:path*`,
       },
       // Rewrite login/logout endpoints
       {
-        source: '/(login|logout|register|forgot-password|reset-password)',
+        source: "/(login|logout|register|forgot-password|reset-password)",
         destination: `${process.env.NEXT_PUBLIC_API_URL}/$1`,
       },
     ];
@@ -25,11 +25,11 @@ const nextConfig = {
     return [
       {
         // Apply these headers to all routes
-        source: '/:path*',
+        source: "/:path*",
         headers: [
           {
-            key: 'X-Requested-With',
-            value: 'XMLHttpRequest',
+            key: "X-Requested-With",
+            value: "XMLHttpRequest",
           },
         ],
       },
@@ -39,12 +39,19 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/api/:path*',
+        source: "/api/:path*",
         headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value:
+              "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
+          },
         ],
       },
     ];
