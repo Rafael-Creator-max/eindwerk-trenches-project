@@ -2,9 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   // swcMinify: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   async rewrites() {
     return [
       // Rewrite API requests to the DDEV backend
