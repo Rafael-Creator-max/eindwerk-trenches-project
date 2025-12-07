@@ -14,9 +14,6 @@ tags:
     name: 'Cryptocurrency Management'
     description: "\nAPIs for managing cryptocurrencies and user interactions with them"
   -
-    name: Endpoints
-    description: ''
-  -
     name: 'User Actions'
     description: ''
 components:
@@ -553,62 +550,6 @@ paths:
         required: true
         schema:
           type: string
-  /api/forgot-password:
-    post:
-      summary: 'Send password reset link'
-      operationId: sendPasswordResetLink
-      description: ''
-      parameters: []
-      responses: {  }
-      tags:
-        - Endpoints
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  description: 'Must be a valid email address.'
-                  example: gbailey@example.net
-              required:
-                - email
-      security: []
-  /api/reset-password:
-    post:
-      summary: 'Reset password'
-      operationId: resetPassword
-      description: ''
-      parameters: []
-      responses: {  }
-      tags:
-        - Endpoints
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                token:
-                  type: string
-                  description: ''
-                  example: architecto
-                email:
-                  type: string
-                  description: 'Must be a valid email address.'
-                  example: zbailey@example.net
-                password:
-                  type: string
-                  description: 'Must be at least 8 characters.'
-                  example: '-0pBNvYgxw'
-              required:
-                - token
-                - email
-                - password
-      security: []
   '/api/cryptocurrencies/{id}/follow':
     post:
       summary: 'Follow a Cryptocurrency'
