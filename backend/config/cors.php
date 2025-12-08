@@ -22,6 +22,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',
+        'https://eindwerk-trenches-project-production.up.railway.app',
         'https://your-production-domain.com',
     ],
 
